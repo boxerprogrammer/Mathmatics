@@ -18,6 +18,9 @@
     <ClCompile Include="Ojisan.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="ScreenShaker.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="World.h">
@@ -27,6 +30,9 @@
       <Filter>Sources</Filter>
     </ClInclude>
     <ClInclude Include="Ojisan.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenShaker.h">
       <Filter>Sources</Filter>
     </ClInclude>
   </ItemGroup>

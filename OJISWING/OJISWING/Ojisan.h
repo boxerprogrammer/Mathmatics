@@ -1,9 +1,12 @@
 #pragma once
 #include"Character.h"
+class ScreenShaker;
 class Ojisan : public Character
 {
+	private:
+		ScreenShaker& _shaker;
 	public:
-		Ojisan(const char* filename,int xnum,int ynum);
+		Ojisan(const char* filename,int xnum,int ynum,ScreenShaker& shaker);
 		~Ojisan(void);
 		///毎フレーム呼び出す処理
 		void Update();
@@ -28,13 +31,15 @@ class Ojisan : public Character
 
 		void ResetOjisan(float x, float y);
 
+		bool IsFlying()const;
+
 	private:
 		//各フェーズ
 		void (Ojisan::*_phase)();
 		void FallingPhase();//落下フェーズ
 		void SwingPhase();//振り子フェーズ
 		void FlyingPhase();//射出後フェーズ
-
+		void GroundPhase();//着地フェーズ
 
 
 		void OnAdjust();
@@ -48,6 +53,7 @@ class Ojisan : public Character
 		void SetAccel(float ax,float ay);
 		Position _endPoint;
 		Position _scroll;
+		float _theta;
 		float _g;
 		float _v;
 		float _ax,_ay;

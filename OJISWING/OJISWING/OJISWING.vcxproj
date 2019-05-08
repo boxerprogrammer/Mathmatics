@@ -14,11 +14,13 @@
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Ojisan.cpp" />
+    <ClCompile Include="ScreenShaker.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h" />
     <ClInclude Include="Ojisan.h" />
+    <ClInclude Include="ScreenShaker.h" />
     <ClInclude Include="World.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

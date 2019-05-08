@@ -1,9 +1,9 @@
 #include "Ojisan.h"
 #include<DxLib.h>
-
+#include"ScreenShaker.h"
 const int GROUND_LINE=428;
 
-Ojisan::Ojisan(const char* filename,int xnum,int ynum) : Character(filename,xnum,ynum),
+Ojisan::Ojisan(const char* filename,int xnum,int ynum,ScreenShaker& shaker) : Character(filename,xnum,ynum),_shaker(shaker),
 	_vx(0),_vy(0),_ax(0),_ay(0),_isPushJump(false),_isJumped(false)
 {
 	_phase=&Ojisan::FallingPhase;
@@ -15,7 +15,7 @@ Ojisan::Ojisan(const char* filename,int xnum,int ynum) : Character(filename,xnum
 	_v=0;
 	OnInit(_vx,_vy);
 
-	_g=1.f;//重力の定義
+	_g=0.8f;//重力の定義
 	_length=320;//紐の長さの計算
 	_handle=LoadGraph("img/ojisan.png");
 }
@@ -71,7 +71,7 @@ Ojisan::SwingPhase(){
 	
 	v=v.normalized();
 	
-	float theta=atan2f(Cross(v,Vec2(-1,0)),Dot(v,Vec2(-1,0)));
+	_theta =atan2f(Cross(v,Vec2(-1,0)),Dot(v,Vec2(-1,0)));
 	float cost = Dot(v,Vec2(-1,0));
 	float sint = Cross(v,Vec2(-1,0));
 
@@ -90,17 +90,19 @@ Ojisan::SwingPhase(){
 
 	
 	if(!_isJumped){
-		DrawLine(_pos.x,_pos.y,320,0,0xffffffff,2);
+		DrawLine(_pos.x - _scroll.x,_pos.y,320 - _scroll.x,0,0xffffffff,2);
 	}
-	DrawRotaGraph(_pos.x,_pos.y,1.0,-(theta-3.14159265358979/2),_handle,true,false);
+	DrawRotaGraph(_pos.x - _scroll.x,_pos.y,1.0,-(_theta -3.14159265358979/2),_handle,true,false);
 }
 void 
 Ojisan::FlyingPhase(){
 	Vec2 v=(_pos-_endPoint);
 	v=v.normalized();
-	float theta=atan2f(Cross(v,Vec2(-1,0)),Dot(v,Vec2(-1,0)));
+	_theta =atan2f(Cross(v,Vec2(-1,0)),Dot(v,Vec2(-1,0)));
 	if(_pos.y>=GROUND_LINE){///地面に当たったら…
 		OnGround(_pos.x,_pos.y,_vx,_vy);
+		_shaker.Shake();
+		_phase = &Ojisan::GroundPhase;
 	}	
 	char keyBuff[256];
 	DxLib::GetHitKeyStateAll(keyBuff);
@@ -116,7 +118,26 @@ Ojisan::FlyingPhase(){
 	}
 	OnMove(_pos.x,_pos.y,_vx,_vy);
 	_vy+=_g;
-	DrawRotaGraph(_pos.x+_scroll.x,_pos.y+_scroll.y,1.0,-(theta-3.14159265358979/2),_handle,true,false);
+	DrawRotaGraph(_pos.x-_scroll.x,_pos.y-_scroll.y,1.0,-(_theta -3.14159265358979/2),_handle,true,false);
+}
+
+
+void
+Ojisan::GroundPhase() {
+	char keyBuff[256];
+	DxLib::GetHitKeyStateAll(keyBuff);
+	if (keyBuff[KEY_INPUT_SPACE]) {
+		if (!_isPushJump) {
+			ResetOjisan(_endPoint.x, _endPoint.y);
+			_scroll.x = 0;
+			_scroll.y = 0;
+		}
+		_isPushJump = true;
+	}
+	else {
+		_isPushJump = false;
+	}
+	DrawRotaGraph(_pos.x - _scroll.x, _pos.y - _scroll.y, 1.0, -(_theta - 3.14159265358979 / 2), _handle, true, false);
 }
 
 void
@@ -132,6 +153,7 @@ Ojisan::SetStartPosition(float x, float y){
 	Character::SetPosition(x,y);
 	Vec2 v = _pos-_endPoint;
 	_length=v.Length();
+	_v = 0;
 }
 
 void 
@@ -213,6 +235,12 @@ Ojisan::OnPushJumpKey(float& vx, float& vy){
 
 	_phase=&Ojisan::FlyingPhase;
 
+
+
+}
+bool 
+Ojisan::IsFlying()const {
+	return _isJumped;
 }
 
 void //左キー押されたイベント
@@ -225,5 +253,5 @@ Ojisan::OnPushLeftKey(float& vx,float& vy){
 void //右キー押されたイベント
 Ojisan::OnPushRightKey(float& vx, float &vy){
 	//⑦ここに右キーを押された時の処理を書いてください
-	_v-=0.5f;
+	_v+=0.5f;
 }
