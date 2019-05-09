@@ -14,7 +14,8 @@ Ojisan::Ojisan(const char* filename,int xnum,int ynum,ScreenShaker& shaker) : Ch
 	_scroll.y=0;
 	_v=0;
 	OnInit(_vx,_vy);
-
+	_explosionSE = LoadSoundMem("sound/explosion.mp3");
+	_explosionH = LoadGraph("img/explosion.png");
 	_g=0.8f;//èdóÕÇÃíËã`
 	_length=320;//ïRÇÃí∑Ç≥ÇÃåvéZ
 	_handle=LoadGraph("img/ojisan.png");
@@ -103,6 +104,7 @@ Ojisan::FlyingPhase(){
 		OnGround(_pos.x,_pos.y,_vx,_vy);
 		_shaker.Shake();
 		_phase = &Ojisan::GroundPhase;
+		PlaySoundMem(_explosionSE, DX_PLAYTYPE_BACK);
 	}	
 	char keyBuff[256];
 	DxLib::GetHitKeyStateAll(keyBuff);
@@ -138,6 +140,8 @@ Ojisan::GroundPhase() {
 		_isPushJump = false;
 	}
 	DrawRotaGraph(_pos.x - _scroll.x, _pos.y - _scroll.y, 1.0, -(_theta - 3.14159265358979 / 2), _handle, true, false);
+	DxLib::DrawRectRotaGraph2(_pos.x - _scroll.x, _pos.y - _scroll.y, (_frame / 2) * 256, 0, 256, 256, 128, 220, 2.0f, 0.0, _explosionH, true);
+	++_frame;
 }
 
 void
@@ -161,6 +165,7 @@ Ojisan::ResetOjisan(float x, float y){
 	_isJumped=false;
 	SetStartPosition(x,y);
 	_phase=&Ojisan::FallingPhase;
+	_frame = 0;
 }
 
 

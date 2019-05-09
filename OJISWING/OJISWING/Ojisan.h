@@ -5,6 +5,9 @@ class Ojisan : public Character
 {
 	private:
 		ScreenShaker& _shaker;
+		int _explosionSE;
+		int _explosionH;
+		int _frame=0;
 	public:
 		Ojisan(const char* filename,int xnum,int ynum,ScreenShaker& shaker);
 		~Ojisan(void);

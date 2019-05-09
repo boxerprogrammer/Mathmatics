@@ -34,9 +34,9 @@ ScreenShaker::PrepareShake() {
 void
 ScreenShaker::UpdateShake() {
 	SetDrawScreen(DX_SCREEN_BACK);
-	ClearDrawScreen();
-	auto sx = DxLib::GetRand(4) - 2;
-	auto sy = DxLib::GetRand(4) - 2;
+	//ClearDrawScreen();
+	auto sx = DxLib::GetRand(6) - 3;
+	auto sy = DxLib::GetRand(6) - 3;
 	DrawGraph(sx*_shakeScale, sy*_shakeScale, _screenH, true);
 	_shakeScale *= 0.95f;
 }
