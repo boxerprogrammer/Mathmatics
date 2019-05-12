@@ -13,34 +13,57 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int){
 	DxLib::SetDrawScreen(DX_SCREEN_BACK);
 	DxLib::SetGraphMode(960,480,32);
 	int bgH = LoadGraph("img/background.png");
+	int skyH = LoadGraph("img/sky.png");
 	struct Size {
 		int w, h;
 	};
 	Size bgSize;
 	GetGraphSize(bgH, &bgSize.w, &bgSize.h);
+
+	Size skySize;
+	GetGraphSize(skyH, &skySize.w, &skySize.h);
+
 	ScreenShaker shaker;
 	Ojisan Ojisan("img/Ojisan.png",1,1,shaker);
 	Ojisan.SetStartPosition(Ojisan.GetEndPoint().x,0);
 	Ojisan.AddAnimInfo(0,0);
 
 	World w(Ojisan);
-	int scroll=0;
+	int scrollx=0;
+	int scrolly = 0;
 	bool isStarted = false;
 	
 	while(DxLib::ProcessMessage()==0){
 		shaker.PrepareShake();
 		DxLib::ClearDrawScreen();
-		float x=Ojisan.GetX()-320;
+		auto& ojipos = Ojisan.GetPosition();
+		float x=ojipos.x-320;
+		float y = ojipos.y -430;
 
-		scroll=max(0,x);
-		DrawGraph(-(scroll %(2* bgSize.w)), 0, bgH, false);
-		DrawRotaGraph2(-(scroll % (2 * bgSize.w))+bgSize.w, 0, 0, 0, 1.0, 0.0, bgH, false, true);
-		DrawGraph(-(scroll % (2 * bgSize.w))+bgSize.w*2, 0, bgH, false);
-		DrawRotaGraph2(-(scroll % (2 * bgSize.w)) + bgSize.w*3, 0, 0, 0, 1.0, 0.0, bgH, false, true);
+		scrollx=max(0,x);
+		if (Ojisan.IsFlying()) {
+			scrolly = y;//// max(0, y);
+		}
+		DrawGraph(-(scrollx %(2* bgSize.w)), -scrolly, bgH, false);
+		DrawRotaGraph2(-(scrollx % (2 * bgSize.w))+bgSize.w, -scrolly, 0, 0, 1.0, 0.0, bgH, false, true);
+		DrawGraph(-(scrollx % (2 * bgSize.w))+bgSize.w*2, -scrolly, bgH, false);
+		DrawRotaGraph2(-(scrollx % (2 * bgSize.w)) + bgSize.w*3, -scrolly, 0, 0, 1.0, 0.0, bgH, false, true);
+
+		DrawGraph(-(scrollx % (2 * skySize.w)),-512 -scrolly,skyH, false);
+		DrawGraph(-(scrollx % (2 * skySize.w))+skySize.w, -512 -scrolly, skyH, false);
+		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w*2, -512 -scrolly, skyH, false);
+		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w*3, -512 -scrolly, skyH, false);
+
+		DrawGraph(-(scrollx % (2 * skySize.w)), -1024 - scrolly, skyH, false);
+		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w, -1024 - scrolly, skyH, false);
+		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 2, -1024 - scrolly, skyH, false);
+		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 3, -1024 - scrolly, skyH, false);
+
+
 			
-		DrawFormatString(-scroll + bgSize.w * (scroll / (4 * bgSize.w)) * 4, 400, 0xff0000, "%d", 0);
+		DrawFormatString(-scrollx + bgSize.w * (scrollx / (4 * bgSize.w)) * 4, 400, 0xff0000, "%d", 0);
 				
-		Ojisan.SetScroll(scroll,0);
+		Ojisan.SetScroll(scrollx, scrolly);
 
 		if (DxLib::CheckHitKey(KEY_INPUT_RETURN)) {
 			isStarted = true;
