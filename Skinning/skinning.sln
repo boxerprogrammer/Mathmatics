@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.438
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "skinning", "skinning\skinning.vcxproj", "{DC52C674-1DF8-4C48-954F-3D4DB88DC319}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DC52C674-1DF8-4C48-954F-3D4DB88DC319}.Debug|x64.ActiveCfg = Debug|x64
+		{DC52C674-1DF8-4C48-954F-3D4DB88DC319}.Debug|x64.Build.0 = Debug|x64
+		{DC52C674-1DF8-4C48-954F-3D4DB88DC319}.Debug|x86.ActiveCfg = Debug|Win32
+		{DC52C674-1DF8-4C48-954F-3D4DB88DC319}.Debug|x86.Build.0 = Debug|Win32
+		{DC52C674-1DF8-4C48-954F-3D4DB88DC319}.Release|x64.ActiveCfg = Release|x64
+		{DC52C674-1DF8-4C48-954F-3D4DB88DC319}.Release|x64.Build.0 = Release|x64
+		{DC52C674-1DF8-4C48-954F-3D4DB88DC319}.Release|x86.ActiveCfg = Release|Win32
+		{DC52C674-1DF8-4C48-954F-3D4DB88DC319}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E519AA15-B66B-4B13-BAD5-3BA7637F002A}
+	EndGlobalSection
+EndGlobal
