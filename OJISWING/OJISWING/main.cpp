@@ -57,7 +57,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int){
 		DrawGraph(-(scrollx % (2 * skySize.w)), -1024 - scrolly, skyH, false);
 		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w, -1024 - scrolly, skyH, false);
 		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 2, -1024 - scrolly, skyH, false);
-		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 3, -1024 - scrolly, skyH, false);
+		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 3, -1024  - scrolly, skyH, false);
 
 
 			
