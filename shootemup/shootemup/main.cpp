@@ -2,8 +2,12 @@
 #include<cmath>
 #include"Geometry.h"
 
-//当たり判定関数
-bool IsCollided(const Circle& lval, const Circle& rval) {
+///当たり判定関数
+///@param posA Aの座標
+///@param radiusA Aの半径
+///@param posB Bの座標
+///@param radiusB Bの半径
+bool IsHit(const Position2& posA, float radiusA, const Position2& posB,  float radiusB); {
 	//当たり判定を実装してください
 	return false;
 }
@@ -28,6 +32,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Vector2 vel;//速度
 		bool isActive = false;//生きてるか～？
 	};
+
+	//弾の半径
+	float bulletRadius = 5.0f;
+
+	//自機の半径
+	float playerRadius = 10.0f;
+
 	//適当に256個くらい作っとく
 	Bullet bullets[256];
 
@@ -62,7 +73,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		DrawRotaGraph(playerpos.x, playerpos.y, 2.0f, 0.0f, playerH[pidx], true);
 		if (isDebugMode) {
 			//自機の本体(当たり判定)
-			DrawCircle(playerpos.x, playerpos.y, 5, 0xffaaaa, false, 3);
+			DrawCircle(playerpos.x, playerpos.y, playerRadius, 0xffaaaa, false, 3);
 		}
 
 		//弾発射
@@ -95,12 +106,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			
 			if (isDebugMode) {
 				//弾の本体(当たり判定)
-				DrawCircle(b.pos.x, b.pos.y, 5, 0x0000ff, false, 3);
+				DrawCircle(b.pos.x, b.pos.y, bulletRadius, 0x0000ff, false, 3);
 			}
 			//弾を殺す
 			if (b.pos.x + 16 < 0 || b.pos.x - 16 > 640 ||
 				b.pos.y + 24 < 0 || b.pos.y - 24 > 480) {
 				b.isActive = false;
+			}
+
+			//あたり！
+			if (IsHit(b.pos, bulletRadius, playerpos, playerRadius)) {
+				//当たった反応を書いてください。
 			}
 		}
 
