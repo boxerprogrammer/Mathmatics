@@ -7,7 +7,7 @@
 ///@param radiusA A‚Ì”¼Œa
 ///@param posB B‚ÌÀ•W
 ///@param radiusB B‚Ì”¼Œa
-bool IsHit(const Position2& posA, float radiusA, const Position2& posB,  float radiusB); {
+bool IsHit(const Position2& posA, float radiusA, const Position2& posB,  float radiusB) {
 	//“–‚½‚è”»’è‚ğÀ‘•‚µ‚Ä‚­‚¾‚³‚¢
 	return false;
 }
@@ -19,6 +19,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		return -1;
 	}
 	SetDrawScreen(DX_SCREEN_BACK);
+
+	//”wŒi—p
+	int bgH[4];
+	LoadDivGraph("img/bganim.png", 4, 4, 1, 256, 192, bgH);
+
+	int skyH = LoadGraph("img/sky.png");
+	int sky2H = LoadGraph("img/sky2.png");
 
 	auto bulletH=LoadGraph("img/bullet.png");
 	int playerH[10];
@@ -49,12 +56,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	char keystate[256];
 	bool isDebugMode = false;
+	int skyy = 0;
+	int skyy2 = 0;
+	int bgidx = 0;
 	while (ProcessMessage() == 0) {
 		ClearDrawScreen();
 
 		GetHitKeyStateAll(keystate);
 
 		isDebugMode = keystate[KEY_INPUT_P];
+
+		//”wŒi
+		DrawExtendGraph(0, 0, 640, 480, bgH[bgidx / 8], false);
+		bgidx = (bgidx + 1) % 32;
+
+		//SetDrawBlendMode(DX_BLENDMODE_ADD, 255);
+		skyy = (skyy + 1) % 480;
+		skyy2 = (skyy2 + 2) % 480;
+		DrawExtendGraph(0, skyy, 640, skyy + 480, skyH, true);
+		DrawExtendGraph(0, skyy - 480, 640, skyy, skyH, true);
+		DrawExtendGraph(0, skyy2, 640, skyy2 + 480, sky2H, true);
+		DrawExtendGraph(0, skyy2 - 480, 640, skyy2, sky2H, true);
+
 
 		//ƒvƒŒƒCƒ„[
 		if (keystate[KEY_INPUT_RIGHT]) {
@@ -82,9 +105,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				if (!b.isActive) {
 					b.pos = enemypos;
 					b.vel = Vector2(0, 5);
-
-					b.vel = (playerpos - b.pos).Normalized()*5.0f;
-
+					b.vel = (playerpos - enemypos).Normalized()*5.0f;
 					b.isActive = true;
 					break;
 				}
@@ -99,8 +120,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//’e‚ÌŒ»İÀ•W‚É’e‚ÌŒ»İ‘¬“x‚ğ‰ÁZ‚µ‚Ä‚­‚¾‚³‚¢
 			b.pos += b.vel;
+
 			float angle = 0.0f;
-			//’e‚ÌŠp“x‚ğatan2‚ÅŒvZ‚µ‚Ä‚­‚¾‚³‚¢B
+			//’e‚ÌŠp“x‚ğatan2‚ÅŒvZ‚µ‚Ä‚­‚¾‚³‚¢Bangle‚É’l‚ğ“ü‚ê‚é‚ñ‚¾‚æƒIƒD
 			angle = atan2(b.vel.y, b.vel.x);
 			DrawRotaGraph(b.pos.x, b.pos.y,1.0f,angle, bulletH, true);
 			
@@ -115,6 +137,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 
 			//‚ ‚½‚èI
+			//«‚ÌIsHit‚ÍÀ‘•‚ğ‘‚¢‚Ä‚Ü‚¹‚ñB©•ª‚Å‘‚¢‚Ä‚­‚¾‚³‚¢B
 			if (IsHit(b.pos, bulletRadius, playerpos, playerRadius)) {
 				//“–‚½‚Á‚½”½‰‚ğ‘‚¢‚Ä‚­‚¾‚³‚¢B
 			}

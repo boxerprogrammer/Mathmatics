@@ -74,3 +74,5 @@
 /shootemup/x64/Debug/shootemup.ilk
 /shootemup/shootemup/img/player.png
 /shootemup/shootemup/img/enemy.png
+*.ipch
+*.zip
