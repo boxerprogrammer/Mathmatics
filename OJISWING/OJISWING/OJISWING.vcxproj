@@ -27,7 +27,7 @@
     <ProjectGuid>{2A9F199B-39E2-423D-837D-295439ACD9D7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>OCPhysics</RootNamespace>
-    <ProjectName>yamame</ProjectName>
+    <ProjectName>OJISWING</ProjectName>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

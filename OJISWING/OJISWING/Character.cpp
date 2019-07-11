@@ -40,7 +40,6 @@ Character::Draw(){
 	if(_animData.empty()){
 		return;
 	}
-	//DrawRotaGraph(_pos.x,_pos.y,1.f,_angle,_handles[_animData[_currentIndex].animNo],true);
 	DrawRotaGraph2(_pos.x,_pos.y,_unitsize.w/2,_unitsize.h/2,1.0,_angle,_handles[_animData[_currentIndex].animNo],true);
 	if( ++_animCount>=_animData[_currentIndex].wait ){
 		int nextIndex = _animData[_currentIndex].nextIndex;
