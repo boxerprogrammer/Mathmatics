@@ -49,17 +49,13 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int){
 		DrawGraph(-(scrollx % (2 * bgSize.w))+bgSize.w*2, -scrolly, bgH, false);
 		DrawRotaGraph2(-(scrollx % (2 * bgSize.w)) + bgSize.w*3, -scrolly, 0, 0, 1.0, 0.0, bgH, false, true);
 
-		DrawGraph(-(scrollx % (2 * skySize.w)),-512 -scrolly,skyH, false);
-		DrawGraph(-(scrollx % (2 * skySize.w))+skySize.w, -512 -scrolly, skyH, false);
-		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w*2, -512 -scrolly, skyH, false);
-		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w*3, -512 -scrolly, skyH, false);
-
-		DrawGraph(-(scrollx % (2 * skySize.w)), -1024 - scrolly, skyH, false);
-		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w, -1024 - scrolly, skyH, false);
-		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 2, -1024 - scrolly, skyH, false);
-		DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 3, -1024  - scrolly, skyH, false);
-
-
+		for (int i = 1; i <= 4;++i) {
+			int baseY = -512 * i;
+			DrawGraph(-(scrollx % (2 * skySize.w)), baseY - scrolly, skyH, false);
+			DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w, baseY - scrolly, skyH, false);
+			DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 2, baseY - scrolly, skyH, false);
+			DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w * 3, baseY - scrolly, skyH, false);
+		}
 			
 		DrawFormatString(-scrollx + bgSize.w * (scrollx / (4 * bgSize.w)) * 4, 400, 0xff0000, "%d", 0);
 				

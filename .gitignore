@@ -76,3 +76,12 @@
 /shootemup/shootemup/img/enemy.png
 *.ipch
 *.zip
+/OJISWING/Debug/OJISWING.pdb
+/OJISWING/Debug/OJISWING.ilk
+/OJISWING/OJISWING/Debug/OJISWING.tlog/OJISWING.lastbuildstate
+/OJISWING/OJISWING/Debug/OJISWING.tlog/link.write.1.tlog
+/OJISWING/OJISWING/Debug/OJISWING.tlog/link.read.1.tlog
+/OJISWING/OJISWING/Debug/OJISWING.tlog/link.command.1.tlog
+/OJISWING/OJISWING/Debug/OJISWING.tlog/CL.write.1.tlog
+/OJISWING/OJISWING/Debug/OJISWING.tlog/CL.read.1.tlog
+/OJISWING/OJISWING/Debug/OJISWING.tlog/CL.command.1.tlog
