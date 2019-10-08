@@ -70,7 +70,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Position2 mp(mx,my);
 		if (currentMouseInput) {
 			if (lastMouseInput == 0) {
-				for (int i = 0; i < cpoints.size() - 1; ++i) {
+				for (int i = 0; i < cpoints.size() ; ++i) {
 					auto diff = mp - cpoints[i];
 					auto r = hypot(diff.x, diff.y);
 					if (r <= 10.0f) {
