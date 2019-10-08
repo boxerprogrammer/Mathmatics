@@ -49,7 +49,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int){
 		DrawGraph(-(scrollx % (2 * bgSize.w))+bgSize.w*2, -scrolly, bgH, false);
 		DrawRotaGraph2(-(scrollx % (2 * bgSize.w)) + bgSize.w*3, -scrolly, 0, 0, 1.0, 0.0, bgH, false, true);
 
-		for (int i = 1; i <= 4;++i) {
+		for (int i = 1; i <= 16;++i) {
 			int baseY = -512 * i;
 			DrawGraph(-(scrollx % (2 * skySize.w)), baseY - scrolly, skyH, false);
 			DrawGraph(-(scrollx % (2 * skySize.w)) + skySize.w, baseY - scrolly, skyH, false);
