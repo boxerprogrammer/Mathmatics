@@ -162,7 +162,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		DrawLine(512, y, 640, y, 0x0000ff, 2);
 		DrawCircle(580, y, 10, 0xff0000);
 
-		currentX = (currentX + 2) % 1024;
+		currentX = (currentX + 4) % 1024;
 		ScreenFlip();
 	}
 	DxLib_End();
