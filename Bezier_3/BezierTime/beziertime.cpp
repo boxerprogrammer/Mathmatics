@@ -63,8 +63,9 @@ Position2 Clamp(const Position2& value, Position2 minV=Position2(0.0f,0.0f), Pos
 	return Position2(Clamp(value.x, minV.x, maxV.x), Clamp(value.y, minV.y, maxV.y));
 }
 
-///MMD補間ベジェのXから結果のYを返す
-float GetYFromXOnBezier(float x,  Position2 a, Position2 b, unsigned int n = 8) {
+///補間ベジェのXから結果のYを返す
+//ニュートン法
+float GetYFromXOnBezierNT(float x,  Position2 a, Position2 b, unsigned int n = 8) {
 	if (a.x == a.y&&b.x == b.y)return x;//計算不要
 	float t = x;
 	float k0 = 1 + 3 * a.x - 3 * b.x;//t^3の係数
@@ -72,7 +73,7 @@ float GetYFromXOnBezier(float x,  Position2 a, Position2 b, unsigned int n = 8) 
 	float k2 = 3 * a.x;//tの係数
 
 	//誤差の範囲内かどうかに使用する定数
-	const float epsilon = 0.0005;
+	const float epsilon = 0.0005f;
 
 	//ニュートン法
 	for (int i = 0; i < n; ++i) {
@@ -84,6 +85,48 @@ float GetYFromXOnBezier(float x,  Position2 a, Position2 b, unsigned int n = 8) 
 		auto fdt = 3 * k0*t*t + 2 * k1*t + k2;//微分結果
 		if (fdt == 0)break;
 		t -= ft / fdt;
+	}
+	//既に求めたいtは求めているのでyを計算する
+	auto r = 1 - t;
+	return t * t*t + 3 * t*t*r*b.y + 3 * t*r*r*a.y;
+}
+
+///二分法
+float GetYFromXOnBezierBin(float x, Position2 a, Position2 b, unsigned int n = 8) {
+	if (a.x == a.y&&b.x == b.y)return x;//計算不要
+	float t = x;
+	float k0 = 1 + 3 * a.x - 3 * b.x;//t^3の係数
+	float k1 = 3 * b.x - 6 * a.x;//t^2の係数
+	float k2 = 3 * a.x;//tの係数
+
+	//誤差の範囲内かどうかに使用する定数
+	const float epsilon = 0.0005f;
+
+	float at = 0.0f;
+	float bt = 1.0f;
+	//二分法
+	for (int i = 0; i < n; ++i) {
+		//f(t)求めまーす
+		auto fat = k0 * at*at*at + k1 * at*at + k2 * at - x;
+		auto fbt = k0 * bt*bt*bt + k1 * bt*bt + k2 * bt - x;
+		//もし結果が0に近い(誤差の範囲内)なら打ち切り
+		if (fat <= epsilon && fat >= -epsilon) {
+			t = at;
+			break;
+		}
+		if (fat <= epsilon && fat >= -epsilon) {
+			t = bt;
+			break;
+		}
+		//f(t)求めまーす
+		auto abt = (at + bt) / 2.0f;
+		auto fabt = k0 * abt*abt*abt + k1 * abt*abt + k2 * abt - x;
+		if (abt*at >= 0) {
+			at = abt;
+		}
+		else {
+			bt = abt;
+		}
 	}
 	//既に求めたいtは求めているのでyを計算する
 	auto r = 1 - t;
@@ -144,10 +187,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		float x = abs(currentX - 512);
 
 		//ベジェ関数を0～1の前提で作っているため、あとyも逆方向のため引数が少し面倒になっている
-		auto y = GetYFromXOnBezier(x / 512.0f,
+		auto y = GetYFromXOnBezierNT(x / 512.0f,
 									Position2(0, 1) + (cpoints[1] / 512.0f)*Vector2(1, -1),
 									Position2(0, 1) + (cpoints[2] / 512.0f)*Vector2(1, -1),
 									16);
+
+
+		//auto y = GetYFromXOnBezierBin(x / 512.0f,
+		//							Position2(0, 1) + (cpoints[1] / 512.0f)*Vector2(1, -1),
+		//							Position2(0, 1) + (cpoints[2] / 512.0f)*Vector2(1, -1),
+		//							20);
 		y = 512.0f-(512.f*y);//0～512へ戻す
 
 		DrawLine(x, 0, x, 512, 0xff0000, 2);
