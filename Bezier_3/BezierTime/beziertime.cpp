@@ -114,14 +114,14 @@ float GetYFromXOnBezierBin(float x, Position2 a, Position2 b, unsigned int n = 8
 			t = at;
 			break;
 		}
-		if (fat <= epsilon && fat >= -epsilon) {
+		if (fbt <= epsilon && fbt >= -epsilon) {
 			t = bt;
 			break;
 		}
-		//f(t)求めまーす
+		//f((a+b)/2)求めまーす
 		auto abt = (at + bt) / 2.0f;
 		auto fabt = k0 * abt*abt*abt + k1 * abt*abt + k2 * abt - x;
-		if (abt*at >= 0) {
+		if (fabt*fat >= 0) {//符号が同じだったら入れ替える
 			at = abt;
 		}
 		else {
@@ -132,6 +132,40 @@ float GetYFromXOnBezierBin(float x, Position2 a, Position2 b, unsigned int n = 8
 	auto r = 1 - t;
 	return t * t*t + 3 * t*t*r*b.y + 3 * t*r*r*a.y;
 }
+
+
+///半分刻み法(勝手に命名)
+float GetYFromXOnBezierHalfSolve(float x, Position2 a, Position2 b, unsigned int n = 8) {
+	if (a.x == a.y&&b.x == b.y)return x;//計算不要
+	float t = x;
+	float k0 = 1 + 3 * a.x - 3 * b.x;//t^3の係数
+	float k1 = 3 * b.x - 6 * a.x;//t^2の係数
+	float k2 = 3 * a.x;//tの係数
+
+	//誤差の範囲内かどうかに使用する定数
+	const float epsilon = 0.0005f;
+	
+	for (int i = 0; i < n; ++i) {
+		//f(t)求めまーす
+		auto ft = k0 * t*t*t + k1 * t*t + k2 * t - x;
+		//もし結果が0に近い(誤差の範囲内)なら打ち切り
+		if (ft <= epsilon && ft >= -epsilon)break;
+
+		t -= ft / 2;
+		
+	}
+	//既に求めたいtは求めているのでyを計算する
+	auto r = 1 - t;
+	return t * t*t + 3 * t*t*r*b.y + 3 * t*r*r*a.y;
+}
+
+
+using BezierTimeFunc_t = float (*)(float , Position2 , Position2 , unsigned int );
+
+struct Solver {
+	string name;
+	BezierTimeFunc_t func;
+};
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	SetGraphMode(640, 512, 32);
@@ -146,8 +180,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DxLib_Init();
 	SetDrawScreen(DX_SCREEN_BACK);
 	int currentX = 512;
+
+	char keystate[256];
+	char lastKeyState[256];
+	Solver bzFuncs[] = { {"ニュートン法",GetYFromXOnBezierNT} ,
+							{"二分法"	,GetYFromXOnBezierBin},
+							{"半分刻み法"	,GetYFromXOnBezierHalfSolve} };
+
+	uint8_t currentBzFuncNo = 0;
+	uint8_t tryCount = 8;
+
 	while (ProcessMessage() == 0) {
 		ClearDrawScreen();
+		GetHitKeyStateAll(keystate);
+		if (keystate[KEY_INPUT_UP]&&!lastKeyState[KEY_INPUT_UP]) {
+			currentBzFuncNo=(currentBzFuncNo-1 + _countof(bzFuncs)) % _countof(bzFuncs);
+		}
+		if (keystate[KEY_INPUT_DOWN] && !lastKeyState[KEY_INPUT_DOWN]) {
+			currentBzFuncNo = (currentBzFuncNo +1) % _countof(bzFuncs);
+		}
+		if (keystate[KEY_INPUT_RIGHT] && !lastKeyState[KEY_INPUT_RIGHT]) {
+			tryCount = min(tryCount + 4, 128);
+		}
+		if (keystate[KEY_INPUT_LEFT] && !lastKeyState[KEY_INPUT_LEFT]) {
+			tryCount = max(tryCount - 4, 4);
+		}
+		copy(begin(keystate),end(keystate), lastKeyState);
 
 		auto currentMouseInput = GetMouseInput();
 
@@ -186,21 +244,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		float x = abs(currentX - 512);
 
+		auto& bzfunc = bzFuncs[currentBzFuncNo];
+		DrawFormatString(10, 10, 0xffaaaa, "方式=%s", bzfunc.name.c_str());
+		DrawFormatString(10, 30, 0xffaaaa, "試行回数=%d", tryCount);
 		//ベジェ関数を0～1の前提で作っているため、あとyも逆方向のため引数が少し面倒になっている
-		auto y = GetYFromXOnBezierNT(x / 512.0f,
+		auto y = bzfunc.func(x / 512.0f,
 									Position2(0, 1) + (cpoints[1] / 512.0f)*Vector2(1, -1),
 									Position2(0, 1) + (cpoints[2] / 512.0f)*Vector2(1, -1),
-									16);
+									tryCount);
 
-
-		//auto y = GetYFromXOnBezierBin(x / 512.0f,
-		//							Position2(0, 1) + (cpoints[1] / 512.0f)*Vector2(1, -1),
-		//							Position2(0, 1) + (cpoints[2] / 512.0f)*Vector2(1, -1),
-		//							20);
 		y = 512.0f-(512.f*y);//0～512へ戻す
 
 		DrawLine(x, 0, x, 512, 0xff0000, 2);
 		DrawLine(0, y, 512, y, 0xffff00, 2);
+		DrawCircle(x, y, 10, 0xff0000);
 
 
 		for (const auto& p : cpoints) {
