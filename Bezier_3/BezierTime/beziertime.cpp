@@ -174,13 +174,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	array<Position2, 4> cpoints = { Position2(0.0f,512.0f),{170,512-170},{340,512-340},{512,0} };
 
-	int capturedNo = -1;
-	int lastMouseInput = 0;
-	bool captured = false;
+
 	DxLib_Init();
 	SetDrawScreen(DX_SCREEN_BACK);
 	int currentX = 512;
-
+	int capturedNo = -1;
+	int lastMouseInput = 0;
+	bool captured = false;
 	char keystate[256];
 	char lastKeyState[256];
 	Solver bzFuncs[] = { {"ニュートン法",GetYFromXOnBezierNT} ,
