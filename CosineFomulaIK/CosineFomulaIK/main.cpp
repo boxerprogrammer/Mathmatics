@@ -40,9 +40,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		edgeLens[i] = (positions[i + 1] - positions[i]).Length();
 	}
 
+	float angle = 0.0f;
 	while (ProcessMessage() == 0) {
 		SetDrawScreen(rt);
 		DrawBox(0, 0, screen_width, screen_height, 0xffffff, true);
+
+		positions[2] = Position2f(425 + cos(angle) * 120, 240 - sin(angle) * 120);
+		angle += 0.05f;
 
 		int mx, my;
 		GetMousePoint(&mx, &my);
@@ -136,6 +140,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		SetDrawScreen(DX_SCREEN_BACK);
 		DrawGraph(0, 0, rt, true);
 		//í èÌï\é¶
+
+		DrawCircleAA(425, 240, 120, 32, 0x00aa00, false, 1);
+
 		for (int i = 0; i < positions.size(); ++i) {
 			uint32_t col = 0x000000;
 			if (overlapped[i]) {
