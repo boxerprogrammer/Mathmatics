@@ -13,10 +13,17 @@ Position2f Clamp(Position2f value, Position2f minV = Position2f(0.0f, 0.0f), Pos
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ChangeWindowMode(true);
 	SetWindowText("余弦定理IK");
-	if (DxLib_Init()==-1) {
+	ChangeWindowMode(true);
+	if (DxLib_Init() == -1) {
 		return -1;
 	}
+	int screen_width, screen_height;
+	GetWindowSize(&screen_width, &screen_height);
 	SetDrawScreen(DX_SCREEN_BACK);
+	auto rt = MakeScreen(screen_width, screen_height);
+
+
+
 	int currentX = 512;
 	int capturedNo = -1;
 	int lastMouseInput = 0;
@@ -26,15 +33,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool overlapped[3] = {};
 	vector<Position2f> positions(3);
 	for (int i = 0; i < positions.size(); ++i) {
-		positions[i] = Position2f(50+i * 250, 240);
+		positions[i] = Position2f(50 + i * 250, 240);
 	}
 	std::vector<float> edgeLens(positions.size() - 1);
 	for (int i = 0; i < edgeLens.size(); ++i) {
 		edgeLens[i] = (positions[i + 1] - positions[i]).Length();
 	}
 
-	while (ProcessMessage()==0) {
-		ClearDrawScreen();
+	while (ProcessMessage() == 0) {
+		SetDrawScreen(rt);
+		DrawBox(0, 0, screen_width, screen_height, 0xffffff, true);
 
 		int mx, my;
 		GetMousePoint(&mx, &my);
@@ -58,7 +66,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				for (int i = 0; i < positions.size(); ++i) {
 					auto diff = mp - positions[i];
 					auto r = diff.Length();
-					if (r <= 20.0f&&i!=1) {//中間地点は選択しない
+					if (r <= 20.0f&&i != 1) {//中間地点は選択しない
 						captured = true;
 						capturedNo = i;
 					}
@@ -95,8 +103,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		float A = linearVec.Length();
 		float B = edgeLens[0];
 		float C = edgeLens[1];
-		linearVec=linearVec.Normalized();
-		float angleFromX = acosf(Dot(linearVec,Vector2f(1,0)));
+		linearVec = linearVec.Normalized();
+		float angleFromX = atan2(linearVec.y, linearVec.x);
 		float theta = acosf((A*A + B * B - C * C) / (2 * A*B));
 		angleFromX += theta;
 
@@ -106,28 +114,48 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		else {
 			positions[1] = positions[0] + linearVec * edgeLens[0];
 		}
-		
-		//表示
-		for (int i = 0; i < positions.size();++i) {
-			uint32_t col = 0xffffff;
+
+		//影表示
+		for (int i = 0; i < positions.size(); ++i) {
+
+			DrawCircleAA(positions[i].x + 2,
+				positions[i].y + 2,
+				25, 32,
+				0x000000,
+				false,
+				2);
+			if (i < positions.size() - 1) {
+				DrawLineAA(positions[i].x + 2,
+					positions[i].y + 2,
+					positions[i + 1].x + 2,
+					positions[i + 1].y + 2,
+					0x000000, 5);
+			}
+		}
+		GraphFilter(rt, DX_GRAPH_FILTER_GAUSS, 4, 800);
+		SetDrawScreen(DX_SCREEN_BACK);
+		DrawGraph(0, 0, rt, true);
+		//通常表示
+		for (int i = 0; i < positions.size(); ++i) {
+			uint32_t col = 0x000000;
 			if (overlapped[i]) {
-				col = 0xaaaaff;
+				col = 0x0000aa;
 			}
-			if (i==capturedNo) {
-				col = 0xffaaaa;
+			if (i == capturedNo) {
+				col = 0xaa0000;
 			}
-			DrawCircle(positions[i].x,
+			DrawCircleAA(positions[i].x,
 				positions[i].y,
-				25,
+				25, 32,
 				col,
 				false,
 				2);
-			if (i < positions.size()-1) {
-				DrawLine(positions[i].x,
+			if (i < positions.size() - 1) {
+				DrawLineAA(positions[i].x,
 					positions[i].y,
 					positions[i + 1].x,
 					positions[i + 1].y,
-					0xffffff, 5);
+					0x000000, 5);
 			}
 		}
 
