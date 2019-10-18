@@ -51,7 +51,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	DxLib::SetUseZBuffer3D(true);
 	DxLib::SetWriteZBuffer3D(true);
-
+	
 	float angle = 0.0f;
 
 	VECTOR campos = GetCameraPosition();
@@ -62,7 +62,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	while (ProcessMessage() == 0) {
 		ClearDrawScreen();
 		SetCameraPositionAndAngle(campos, 0, angleH, 0);
-		
+
 
 		GetHitKeyStateAll(keystate);
 		if (keystate[KEY_INPUT_LEFT]) {
@@ -72,17 +72,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			angleH += 0.01f;
 		}
 		if (keystate[KEY_INPUT_A]) {
-			campos.x -= 1.f;
+			campos.x -= 2.f;
 		}
 		if (keystate[KEY_INPUT_D]) {
-			campos.x += 1.f;
+			campos.x += 2.f;
 		}
 
 		if (keystate[KEY_INPUT_W]) {
-			campos.z += 1.f;
+			campos.z += 2.f;
 		}
 		if (keystate[KEY_INPUT_S]) {
-			campos.z -= 1.f;
+			campos.z -= 2.f;
 		}
 		if (keystate[KEY_INPUT_R]) {
 			angleAxis += 0.01f;
@@ -91,7 +91,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		auto tmpRotV = ToVector3f(VTransformSR(ToVECTOR(rotV), MGetRotX(angleAxis)));
 
-		DrawBox(0, 0, screen_width, screen_height, 0xffffff, true);
+		DrawBox(0, 0, screen_width, screen_height, 0xaaaaaa, true);
+
+
+		for (int i = -5; i < 15; ++i) {
+			for (int j = -5; j < 20; ++j) {
+				DrawSphere3D(VGet(i * 100 , -60, j * 100 ), 50, 32, 0xff0000, 0xaaaaaa, true);
+			}
+		}
 
 
 		positions[2] = Position3f(425 + cos(angle) * 120, 240 - sin(angle) * 120,0);
@@ -160,7 +167,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 		float theta = acosf((A*A + B * B - C * C) / (2 * A*B));
 
-		auto m = MGetRotAxis(ToVECTOR(Cross(tmpRotV,linearVec)), theta);
+		auto m = MGetRotAxis(ToVECTOR(Cross(linearVec,Cross(tmpRotV,linearVec))), theta);
 		auto v = VTransformSR(ToVECTOR(linearVec), m);
 
 		if (A < B + C) {
