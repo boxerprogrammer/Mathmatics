@@ -19,6 +19,20 @@ Vector3f ToVector3f(VECTOR v) {
 	return Vector3f(v.x,v.y,v.z);
 }
 
+void
+DrawCircle3D_XY(const Position3f& c, float radius, uint32_t div, uint32_t color) {
+	
+	float dw = DX_TWO_PI / static_cast<float>(div);
+	float angle = 0.0f;
+	for (int i = 0; i < div; ++i) {
+		auto pos1 = c + Vector3f(radius*cosf(angle), radius*sinf(angle),0);
+		auto pos2 = c + Vector3f(radius*cosf(angle+dw), radius*sinf(angle+dw), 0);
+		DrawLine3D(ToVECTOR(pos1), ToVECTOR(pos2), color);
+		DrawLine3D(ToVECTOR(pos1+Vector3f(1,1,0)), ToVECTOR(pos2+Vector3f(1, 1, 0)), color);
+		angle += dw;
+	}
+}
+
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ChangeWindowMode(true);
 	SetWindowText("—]Œ·’è—IK3D");
@@ -31,8 +45,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	SetDrawScreen(DX_SCREEN_BACK);
 	auto rt = MakeScreen(screen_width, screen_height);
 
-
-
+	
+	
 	int currentX = 512;
 	int capturedNo = -1;
 	int lastMouseInput = 0;
@@ -72,20 +86,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			angleH += 0.01f;
 		}
 		if (keystate[KEY_INPUT_A]) {
-			campos.x -= 2.f;
+			campos.x -= 4.f;
 		}
 		if (keystate[KEY_INPUT_D]) {
-			campos.x += 2.f;
+			campos.x += 4.f;
 		}
 
 		if (keystate[KEY_INPUT_W]) {
-			campos.z += 2.f;
+			campos.z += 4.f;
 		}
 		if (keystate[KEY_INPUT_S]) {
-			campos.z -= 2.f;
+			campos.z -= 4.f;
 		}
 		if (keystate[KEY_INPUT_R]) {
-			angleAxis += 0.01f;
+			angleAxis += 0.05f;
 		}
 
 
@@ -177,7 +191,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			positions[1] = positions[0] + linearVec * edgeLens[0];
 		}
 
-
+		//•`‰æ
+		DrawCircle3D_XY(Position3f(425, 240, 0), 120,32, 0x000000);
 		for (int i = 0; i < positions.size(); ++i) {
 			DrawSphere3D(ToVECTOR(positions[i]), 20, 32, 0xeeeeee, 0xffffff, true);
 			if (i < positions.size() - 1) {
