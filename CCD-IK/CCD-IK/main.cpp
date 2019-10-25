@@ -181,9 +181,139 @@ void MoveTarget(Position2f& target, int &lastMouseInput, bool &captured, bool& t
 		captured = false;
 	}
 }
+constexpr float epsilon = 0.0001f;
 
-///positionsの末端がtargetに一致し、かつ先頭を動かさないようにpositionsを書き換える
-void CCD_IK(Position2f target, vector<IKPoint>& initPositions,vector<IKPoint>& positions, std::vector<float>& edgeLens, unsigned int cyclic = 4) {
+/**
+ * 多関節ノード
+ */
+class Node
+{
+public:
+	Vector2f pos;
+	float rad=0.0f; // 回転角度
+	Node(float x = 0, float y = 0, float rad = 0)
+	{
+		x = x;
+		y = y;
+		rad = rad;
+	}
+};
+
+/**
+ * 多関節用ベクトル
+ */
+struct JointVector
+{
+	Vector2f vec;
+	float n=0.0f; // 内積の結果
+	/**
+	 * 内積を求めて結果を保持する
+	 */
+	void Dot(Vector2f& v)
+	{
+		n = vec.x * v.x + vec.y * v.y;
+	}
+};
+
+/**
+ * 関節の移動(Inverse Kinematics)
+ * @param nodes    関節([0]根元～[$-1]先端)
+ * @param vRad     関節の回転角度
+ * @param lRad     回転角度の限界値
+ * @param distance 関節間の距離
+ * @param x        目標座標(X)
+ * @param y        目標座標(Y)
+ */
+void CCDIKSample(vector<Node>& nodes, float vRad, float lRad,
+	float distance, const Position2f& target)
+{
+	float cos = cosf(vRad);
+	float sin = sinf(vRad);
+	// 前半の処理(回転角度を求める)
+	Node& nTip = nodes.back(); // 先端ノード
+	// 先端⇒根元
+	// リバースイテレート。先端ノードは処理しない
+	for (int i = nodes.size() - 1; i >= 0; i--)
+	{
+		Node& n = nodes[i];
+		// 関節から自機へのベクトルの計算
+		Vector2f dVec=target - n.pos;
+		// 関節から先端へのベクトルと内積の計算
+		JointVector jNode;
+		jNode.vec= nTip.pos - n.pos;
+		jNode.Dot(dVec);
+
+		// 右回りのベクトルの計算
+		JointVector jRight;
+		if (n.rad + vRad <= lRad)
+		{
+			jRight.vec.x = cos * jNode.vec.x - sin * jNode.vec.y;
+			jRight.vec.y = sin * jNode.vec.x + cos * jNode.vec.y;
+			jRight.Dot(dVec);
+		}
+		else
+		{
+			// 限界を超えたので回せない
+			jRight.n = jNode.n;
+		}
+
+		// 左回りのベクトルの計算
+		JointVector jLeft;
+		if (n.rad - vRad >= -lRad)
+		{
+			jLeft.vec.x = cos * jNode.vec.x + sin * jNode.vec.y;
+			jLeft.vec.y = -sin * jNode.vec.x + cos * jNode.vec.y;
+			jLeft.Dot(dVec);
+		}
+		else
+		{
+			// 限界を超えたので回せない
+			jLeft.n = jNode.n;
+		}
+
+		// 回転方向の選択
+		// 内積を比較して、回転を３通りのなかから選ぶ
+		// 先端を回転させて、新しい先端の位置を求める
+		if (jRight.n > jNode.n&& jRight.n > jLeft.n)
+		{
+			// 右回り
+			n.rad += vRad;
+			nTip.pos = n.pos + jRight.vec;
+				
+		}
+		if (jLeft.n > jNode.n && jLeft.n > jRight.n)
+		{
+			// 左回り
+			n.rad -= vRad;
+			nTip.pos = n.pos + jLeft.vec;
+		}
+	}
+
+	// 後半の処理(座標を決める)
+	Position2f p =Position2f( distance,0);
+
+	// 根元⇒先端
+	// 根元は移動しない
+	for (int i = 1; i < nodes.size(); i++)
+	{
+		Node& n1 = nodes[i - 1];
+		Node& n2 = nodes[i];
+		float cos = cosf(n1.rad);
+		float sin = sinf(n1.rad);
+		Vector2f d(cos * p.x - sin * p.y,
+				sin * p.x + cos * p.y);
+		n2.pos = n1.pos + d;
+		p = d;
+	}
+}
+
+
+
+
+
+
+///制限付きCCD-IK
+void LimitedCCD_IK(Position2f target, vector<IKPoint>& initPositions,vector<IKPoint>& positions, std::vector<float>& edgeLens, unsigned int cyclic = 4) {
 	//もしtargetとpositionsの先頭が全骨の長さより長いなら角度は180確定なのでCCD-IKを行わず末端から回転させる
 	if (accumulate(edgeLens.begin(), edgeLens.end(), 0) < (target - positions.front().pos).Length()) {
 		auto vec = target - positions.front().pos;
@@ -194,7 +324,7 @@ void CCD_IK(Position2f target, vector<IKPoint>& initPositions,vector<IKPoint>& p
 		return;
 	}
 
-	copy(begin(initPositions), end(initPositions), begin(positions));
+	//copy(begin(initPositions), end(initPositions), begin(positions));
 
 	//繰り返し回数だけ繰り返す
 	for (int c = 0; c < cyclic; ++c) {
@@ -203,38 +333,107 @@ void CCD_IK(Position2f target, vector<IKPoint>& initPositions,vector<IKPoint>& p
 		++rit;//末端との角度で計算するため、末端は省く
 		float accumulateAngle = 0.0f;
 		unsigned int i = 0;
+		auto remainAngle = 0.0f;
 		for (;rit!= positions.rend(); ++rit) {
 			//回転角度計算
 			Vector2f vecToEnd = positions.back().pos - rit->pos;//末端と現在のノードのベクトル
-			Vector2f vecToTarget = target - rit->pos;//現在のノードからターゲット(エフェクタ)へのベクトル
+			Vector2f vecToTarget = target - rit->pos;//現在のノードからターゲットへのベクトル
+			//↑が現在の状況とターゲットのベクトルを計算している。内積等をとれば角度を求められるが…？
+			Vector2f vecPrevious = Vector2f();
+			if (rit + 1 != positions.rend()) {
+				vecPrevious = rit->pos - (rit + 1)->pos;
+				vecPrevious.Normalize();
+			}
+			//現在調査中の点と、ひとつ根っこに近い点でベクトルを作る(制限角度のため)
+
+			auto tarLen = vecToTarget.Length();
+			auto endLen = vecToEnd.Length();
+			if (tarLen == 0.0f)continue;
+			if (endLen == 0.0f)continue;
+			
 			vecToEnd.Normalize();
 			vecToTarget.Normalize();
+			
 			//2Dだから角度計算は単純(3Dの場合こうはいかないです)
-			auto angle = atan2f(Cross(vecToEnd, vecToTarget), Dot(vecToEnd, vecToTarget));
-			angle = Clampf(angle, rit->limit.minimum, rit->limit.maximum);
-
-			if (c == 0 && i==0 && angle==0.0f) {
-				auto len=(target - rit->pos).Length();
-				len = min(edgeLens.back(), len);
-				angle= acosf(len / edgeLens.back());
-				if (Clampf(angle, rit->limit.minimum, rit->limit.maximum) == 0.0f) {
-					angle = -angle;
-					angle = Clampf(angle, rit->limit.minimum, rit->limit.maximum);
+			float dot = Dot(vecToEnd, vecToTarget);
+			float cross = Cross(vecToEnd, vecToTarget);
+			float angle = atan2f(cross, dot); 
+			
+			if (dot <= -1.0f)continue;
+			if (fabs(dot-1.0f) <epsilon){//完全に同一(もしくは反対向き)だった場合は曲げきれないんで
+				if (tarLen<endLen  ) {
+					if (fabsf(rit->limit.minimum) < fabsf(rit->limit.maximum)) {
+						angle = acos(tarLen / endLen)/30.0f;
+					}
+					else {
+						angle = -acos(tarLen / endLen)/30.0f;
+					}
 				}
 			}
-			++i;
+			else {
+				
+			}
+			auto tmpAngle=Clampf(angle, rit->limit.minimum, rit->limit.maximum);
+			angle = atan2f(Cross(vecToEnd, vecToTarget), Dot(vecToEnd, vecToTarget));
+			if (angle == tmpAngle) {
+				remainAngle = 0.0f;
+			}
+			else {
+				remainAngle = angle - tmpAngle;//本当は回転していた残り角度を保存
+				angle = tmpAngle;
+			}
+			
 			if (angle == 0.0f)continue;
 			//回転行列を得る
 			Matrix mat = MultipleMat(TranslateMat(rit->pos.x,rit->pos.y),MultipleMat(RotateMat(angle),TranslateMat(-rit->pos.x,-rit->pos.y)));
 			//現在のノードから末端まで回転する
 			auto it = rit.base();
+			--it;
 			for (; it != positions.end(); ++it) {
 				it->pos = MultipleVec(mat, it->pos);
 			}
-
-			
+		}
+		if ((positions.back().pos - target).Length() < epsilon) {
+			break;
 		}
 	}
+}
+
+void CCD_IK(Position2f target, vector<IKPoint>& initPositions, vector<IKPoint>& positions, std::vector<float>& edgeLens, unsigned int cyclic = 4) {
+	//繰り返し回数だけ繰り返す
+	for (int c = 0; c < cyclic; ++c) {
+		//末端から攻めていく
+		auto rit = positions.rbegin();
+		++rit;//末端との角度で計算するため、末端は省く
+		for (; rit != positions.rend(); ++rit) {
+			//回転角度計算
+			Vector2f vecToEnd = positions.back().pos - rit->pos;//末端と現在のノードのベクトル
+			Vector2f vecToTarget = target - rit->pos;//現在のノードからターゲットへのベクトル
+			auto tarLen = vecToTarget.Length();
+			auto endLen = vecToEnd.Length();
+			if (tarLen == 0.0f)continue;
+			if (endLen == 0.0f)continue;
+
+			vecToEnd.Normalize();
+			vecToTarget.Normalize();
+			//2Dだから角度計算は単純(3Dの場合こうはいかないです)
+			float angle = atan2f(Cross(vecToEnd, vecToTarget), Dot(vecToEnd, vecToTarget));
+
+			if (angle == 0.0f)continue;
+			//回転行列を得る
+			Matrix mat = MultipleMat(TranslateMat(rit->pos.x, rit->pos.y), MultipleMat(RotateMat(angle), TranslateMat(-rit->pos.x, -rit->pos.y)));
+			//現在のノードから末端まで回転する
+			auto it = rit.base();
+			for (; it != positions.end(); ++it) {
+				it->pos = MultipleVec(mat, it->pos);
+			}
+		}
+		//末端の座標がターゲットと「ほぼ」一致したら計算を打ち切る
+		if ((positions.back().pos - target).Length() < epsilon) {
+			break;
+		}
+	}
+
 }
 
 void InitPositions(std::vector<IKPoint> &positions, std::vector<float> &edgeLens, Position2f &target) {
@@ -281,6 +480,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	copy(begin(positions), end(positions), begin(initialPositions));
 
+	vector<Node> nodes(positions.size());
+	for (int i = 0; i < positions.size();++i) {
+		nodes[i].pos = positions[i].pos;
+	}
+
 	float angle = 0.0f;
 	
 	while (ProcessMessage() == 0) {
@@ -294,8 +498,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//MoveControlPoint(positions, overlapped, lastMouseInput, captured, capturedNo, edgeLens);
 		MoveTarget(target, lastMouseInput, captured, targetOverlapped);
 
-		CCD_IK(target, initialPositions, positions,edgeLens,8);
-
+		//CCD_IK(target, initialPositions, positions,edgeLens,4);
+		LimitedCCD_IK(target, initialPositions, positions, edgeLens, 8);
 
 		//描画
 		Draw(rt, screen_width, screen_height, positions, target);
