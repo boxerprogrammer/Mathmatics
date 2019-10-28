@@ -237,14 +237,12 @@ void LimitedCCD_IK(const Position2f& target, vector<IKPoint>& initPositions,vect
 		auto rit = positions.rbegin();
 		++rit;//末端との角度で計算するため、末端は省く
 		float accumulateAngle = 0.0f;
-		unsigned int i = 0;
 		auto remainAngle = 0.0f;
 		for (;rit!= positions.rend(); ++rit) {
 			//回転角度計算
 			Vector2f vecToEnd = positions.back().pos - rit->pos;//末端と現在のノードのベクトル
 			Vector2f vecToTarget = target - rit->pos;//現在のノードからターゲットへのベクトル
 			//↑が現在の状況とターゲットのベクトルを計算している。内積等をとれば角度を求められるが…？
-			
 
 			//現在調査中の点と、ひとつ根っこに近い点でベクトルを作る(制限角度のため)
 			//一つ前のベクトルを取得。ない場合は0ベクトル
@@ -275,25 +273,23 @@ void LimitedCCD_IK(const Position2f& target, vector<IKPoint>& initPositions,vect
 			if (fabs(dot-1.0f) <epsilon){
 				if (tarLen<endLen  ) {
 					if (fabsf(rit->limit.minimum) < fabsf(rit->limit.maximum)) {
-						angle = acos(tarLen / endLen)/30.0f;
+						angle = 0.01f;// acos(tarLen / endLen);
 					}
 					else {
-						angle = -acos(tarLen / endLen)/30.0f;
+						angle = -0.01f;// acos(tarLen / endLen);
 					}
 				}
 			}
 			
-			
 			if (vecPrevious.Length() > 0) {
 				//今のと前のベクトル間の角度を測っておく
 				//現在のやつと次のやつの間のベクトルを算出
-				auto currentVec=rit.base()->pos - rit->pos;
+				auto currentVec=rit.base()->pos - rit->pos;//現在のベクトル
+				//前のベクトルと現在のベクトルから角度を計算
 				auto anglePrev = atan2(Cross(vecPrevious, currentVec), Dot(vecPrevious, currentVec));
 
-				auto angleForLimit = angle + anglePrev;
-
-				//auto angleForLimit = atan2(Cross(vecPrevious, vecToTarget), Dot(vecPrevious, vecToTarget));
-				
+				auto angleForLimit = angle + anglePrev;//現在の角度に差分を加算
+				//結果の角度に対して制限クランプする
 				auto tmpAngle = Clampf(angleForLimit, rit->limit.minimum, rit->limit.maximum);
 
 				//もし制限されてたらその分戻す。
@@ -305,7 +301,7 @@ void LimitedCCD_IK(const Position2f& target, vector<IKPoint>& initPositions,vect
 			Matrix mat = MultipleMat(TranslateMat(rit->pos.x,rit->pos.y),MultipleMat(RotateMat(angle),TranslateMat(-rit->pos.x,-rit->pos.y)));
 			//現在のノードから末端まで回転する
 			auto it = rit.base();
-			--it;
+			//--it;
 			for (; it != positions.end(); ++it) {
 				it->pos = MultipleVec(mat, it->pos);
 			}
