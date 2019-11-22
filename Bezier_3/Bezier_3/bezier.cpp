@@ -93,7 +93,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 		
 		for (int i = 0; i < cpoints.size() - 1; ++i) {
-			DrawLine(cpoints[i].x, cpoints[i].y, cpoints[i + 1].x, cpoints[i + 1].y, 0xff8888);
+			DrawLine(cpoints[i].x, cpoints[i].y, cpoints[i + 1].x, cpoints[i + 1].y, 0xff8888,2);
 		}
 		
 		DrawBezier(cpoints,20);
