@@ -154,15 +154,6 @@ float GetYFromXOnBezierHalfSolve(float x, Position2 a, Position2 b, unsigned int
 }
 
 
-///Imagire法(勝手に命名)
-float GetYFromXOnImagireSolve(float x, Position2 a, Position2 b ,unsigned int ) {
-	if (a.x == a.y&&b.x == b.y)return x;//計算不要
-	float t= (3 * a.x - 1) / (1 + 3 * a.x - 3 * b.x);
-	auto r = 1.0f - t;
-	return t * t*t + 3 * t*t*r*b.y + 3 * t*r*r*a.y;
-
-}
-
 using BezierTimeFunc_t = float (*)(float , Position2 , Position2 , unsigned int );
 
 struct Solver {
@@ -188,8 +179,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char lastKeyState[256];
 	Solver bzFuncs[] = { {"ニュートン法",GetYFromXOnBezierNT} ,
 							{"二分法"	,GetYFromXOnBezierBin},
-							{"半分刻み法"	,GetYFromXOnBezierHalfSolve},
-							{"Imagire法"	,GetYFromXOnImagireSolve}
+							{"半分刻み法"	,GetYFromXOnBezierHalfSolve}
 							};
 
 	uint8_t currentBzFuncNo = 0;
