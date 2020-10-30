@@ -64,17 +64,15 @@ Position2 Clamp(const Position2& value, Position2 minV=Position2(0.0f,0.0f), Pos
 }
 
 ///補間ベジェのXから結果のYを返す
-//ニュートン法
+///ニュートン法
 float GetYFromXOnBezierNT(float x,  Position2 a, Position2 b, unsigned int n = 8) {
 	if (a.x == a.y&&b.x == b.y)return x;//計算不要
 	float t = x;
 	float k0 = 1 + 3 * a.x - 3 * b.x;//t^3の係数
 	float k1 = 3 * b.x - 6 * a.x;//t^2の係数
 	float k2 = 3 * a.x;//tの係数
-
 	//誤差の範囲内かどうかに使用する定数
-	const float epsilon = 0.0005f;
-
+	constexpr float epsilon = 0.0005f;
 	//ニュートン法
 	for (int i = 0; i < n; ++i) {
 		//f(t)求めまーす
@@ -100,8 +98,7 @@ float GetYFromXOnBezierBin(float x, Position2 a, Position2 b, unsigned int n = 8
 	float k2 = 3 * a.x;//tの係数
 
 	//誤差の範囲内かどうかに使用する定数
-	const float epsilon = 0.0005f;
-
+	constexpr float epsilon = 0.0005f;
 	float at = 0.0f;
 	float bt = 1.0f;
 	//二分法
@@ -144,15 +141,12 @@ float GetYFromXOnBezierHalfSolve(float x, Position2 a, Position2 b, unsigned int
 
 	//誤差の範囲内かどうかに使用する定数
 	const float epsilon = 0.0005f;
-	
 	for (int i = 0; i < n; ++i) {
 		//f(t)求めまーす
 		auto ft = k0 * t*t*t + k1 * t*t + k2 * t - x;
 		//もし結果が0に近い(誤差の範囲内)なら打ち切り
 		if (ft <= epsilon && ft >= -epsilon)break;
-
 		t -= ft / 2;
-		
 	}
 	//既に求めたいtは求めているのでyを計算する
 	auto r = 1 - t;
@@ -185,7 +179,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char lastKeyState[256];
 	Solver bzFuncs[] = { {"ニュートン法",GetYFromXOnBezierNT} ,
 							{"二分法"	,GetYFromXOnBezierBin},
-							{"半分刻み法"	,GetYFromXOnBezierHalfSolve} };
+							{"半分刻み法"	,GetYFromXOnBezierHalfSolve}
+							};
 
 	uint8_t currentBzFuncNo = 0;
 	uint8_t tryCount = 8;
