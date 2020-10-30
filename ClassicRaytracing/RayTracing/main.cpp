@@ -8,8 +8,10 @@
 
 using namespace std;
 
-const int screen_width = 640;
-const int screen_height = 480;
+constexpr int screen_width = 640;
+constexpr int screen_height = 480;
+
+uint32_t canvas[screen_height][screen_width] = {};
 
 //ヒントになると思って、色々と関数を用意しておりますが
 //別にこの関数を使わなければいけないわけでも、これに沿わなければいけないわけでも
@@ -71,7 +73,8 @@ Vector3 ReflectedVector(const Vector3& inVec, const Vector3& normalVec) {
 ///@param b 青(0～1)
 void
 DrawPixelWithFloat(int x,int y,float r, float g, float b) {
-	DrawPixel(x, y, GetColor(min(r * 0xff,0xff), min(g * 0xff,0xff), min(b * 0xff,0xff)));
+	//DrawPixel(x, y, GetColor(min(r * 0xff,0xff), min(g * 0xff,0xff), min(b * 0xff,0xff)));
+	canvas[y][x] = GetColor(min(r * 0xff, 0xff), min(g * 0xff, 0xff), min(b * 0xff, 0xff));
 }
 
 ///表面材質と法線と光から単純にそのオブジェクトにおけるその点の色を返す
@@ -197,8 +200,9 @@ void RayTracing(Vector3 toLight, const Position3& eye,std::vector<GeometryObject
 	
 	toLight.Normalize();
 	float ambient = 0.1f;
-//#pragma omp parallel for
+#pragma omp parallel for
 	for (int y = 0; y < screen_height; ++y) {//スクリーン縦方向
+#pragma omp parallel for
 		for (int x = 0; x < screen_width; ++x) {//スクリーン横方向
 			
 			//①視点とスクリーン座標から視線ベクトルを作る
@@ -210,6 +214,11 @@ void RayTracing(Vector3 toLight, const Position3& eye,std::vector<GeometryObject
 			auto c = RecursiveTrace(RayLine(eye,ray),objects,nullptr,toLight,5);
 			DrawPixelWithFloat(x, y, c.r, c.g, c.b);
 			continue;
+		}
+	}
+	for (int y = 0; y < screen_height; ++y) {//スクリーン縦方向
+		for (int x = 0; x < screen_width; ++x) {//スクリーン横方向
+			DrawPixel(x, y, canvas[y][x]);
 		}
 	}
 }
@@ -318,7 +327,11 @@ void RayTracing(Vector3 toLight, const Position3& eye,std::vector<GeometryObject
 //	}
 //}
 
+#ifdef _DEBUG
 int main() {
+#else
+int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int) {
+#endif
 	ChangeWindowMode(true);
 	SetGraphMode(screen_width, screen_height, 32);
 	SetMainWindowText(_T("古典的レイトレーシング"));
