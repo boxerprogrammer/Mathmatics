@@ -14,6 +14,10 @@ struct Vector2D {
 		x *= scale;
 		y *= scale;
 	}
+	void operator/=(float div) {
+		x /= div;
+		y /= div;
+	}
 	void operator-=(const Vector2D<T>& in) {
 		x -= in.x;
 		y -= in.y;
@@ -53,7 +57,10 @@ struct Vector2D {
 	Vector2D<T> operator-() {
 		return Vector2D<T>(-x, -y);
 	}
-
+	//時計回りに回転させる
+	Vector2D<T> R() {
+		return Vector2D<T>(-y, x);
+	}
 };
 
 
@@ -73,6 +80,12 @@ template<typename T>
 Vector2D<T> operator*(const Vector2D<T>& lv, const float scale) {
 	return Vector2D<T>(lv.x*scale, lv.y*scale);
 }
+
+template<typename T>
+Vector2D<T> operator/(const Vector2D<T>& lv, const float div) {
+	return Vector2D<T>(lv.x /div, lv.y /div);
+}
+
 
 //整数型ベクトル
 typedef Vector2D<int> Vector2;
