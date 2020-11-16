@@ -101,3 +101,15 @@ Matrix
 LinearInterporate(const Matrix& matA, const Matrix& matB, float t) {
 	return matA * (1.0f - t) + matB * t;
 }
+
+Matrix operator*(const Matrix& lmat, const Matrix& rmat) {
+	return MultipleMat(lmat, rmat);
+}
+Vector2f operator*(const Matrix& lmat, const Vector2f& vec) {
+	return MultipleVec(lmat, vec);
+}
+
+void
+Matrix::operator*=(const Matrix& mat) {
+	*this=MultipleMat(*this, mat);
+}

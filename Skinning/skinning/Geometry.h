@@ -43,6 +43,11 @@ struct Vector2D {
 		auto len = Length();
 		return Vector2D<float>((float)x / len, (float)y / len);
 	}
+	void Normalize() {
+		auto len = Length();
+		x /= len;
+		y /= len;
+	}
 
 	//90°回転する
 	Vector2D<float> Orthogonaled()const {
@@ -57,10 +62,7 @@ struct Vector2D {
 	Vector2D<T> operator-() {
 		return Vector2D<T>(-x, -y);
 	}
-	//時計回りに回転させる
-	Vector2D<T> R() {
-		return Vector2D<T>(-y, x);
-	}
+
 };
 
 
@@ -101,6 +103,7 @@ float Dot(const Vector2f& lval, const Vector2f& rval);
 
 struct Matrix {
 	float m[3][3];
+	void operator*=(const Matrix& mat);
 };
 
 Matrix operator*(const Matrix& mat, float scale);
@@ -123,6 +126,10 @@ Matrix RotateMat(float angle);
 ///@param rmat 右辺値(行列)
 ///@attention 乗算の順序に注意してください
 Matrix MultipleMat(const Matrix& lmat, const Matrix& rmat);
+
+Matrix operator*(const Matrix& lmat, const Matrix& rmat);
+Vector2f operator*(const Matrix& lmat, const Vector2f& vec);
+
 
 ///ベクトルに対して行列乗算を適用し、結果のベクトルを返す
 ///@param mat 行列
