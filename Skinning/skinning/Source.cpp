@@ -154,8 +154,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	auto bones = BuildBones(posses);
 
+	//ウェイト構築
 	std::vector<Vertex> verts;
-	int divNum = 2;
+	int divNum = 4;
 	float step = (posses[1].x - posses[0].x) / static_cast<float>(divNum);
 	for (int i = 0; i < posses.size();++i) {
 		auto& p = posses[i];
@@ -164,7 +165,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		float x = 0.0f;
 		for (int j = 0; j < divNum; ++j) {
 			if (i == 0) {
-				wgt = x / (posses[1].x - posses[0].x);
+				wgt = x / (posses[2].x - posses[0].x);
 				
 			}
 			else{
@@ -251,6 +252,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					LinearInterporate(bones[v.boneNo].GetMatrix(),bones[v.boneNo+1].GetMatrix() , v.weight)
 					, v.origin);
 			}
+			DrawFormatString(v.pos.x, v.pos.y, 0xffffff, "%f", v.weight);
 		}
 		DrawWireframe(verts);
 		lastMpos = mpos;
