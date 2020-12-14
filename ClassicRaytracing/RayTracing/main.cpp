@@ -150,7 +150,12 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 					//反射するなら反射ベクトルと衝突点を元に再帰する(再帰限界を考慮して)
 					auto ray = ReflectedVector(rayline.vector, normal).Normalized();
 					auto color = GetBasicColor(obj, rayline.vector, hitpos, normal, toLight);
-					color *= RecursiveTrace(RayLine(hitpos, ray), objects, obj, toLight, limit - 1);
+					float reflectivity = 0.5f;
+					auto reflectColor = RecursiveTrace(RayLine(hitpos, ray), objects, obj, toLight, limit - 1);
+					if (reflectColor == Color(-1, -1, -1)) {
+						reflectivity = 0.0f;
+					}
+					color = color*(1.0f-reflectivity)+reflectColor*reflectivity;
 					return color;
 				};
 				if (distance < zbuffunc.first) {
@@ -184,7 +189,7 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 			return Color(0.5, 1, 1);
 		}
 		else {
-			return Color(1, 1, 1);
+			return Color(-1, -1, -1);
 		}
 	}
 	else {
@@ -357,7 +362,6 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int) {
 	Sphere* sp = (Sphere*)(objects[0]);
 	Vector3 toLight(-1, 1, 1);
 	while(ProcessMessage()==0){
-		ClearDrawScreen();
 		DxLib::GetHitKeyStateAll(keystate);
 		if (keystate[KEY_INPUT_4]) {
 			toLight.x -= 0.05f;
@@ -404,6 +408,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int) {
 		DrawBox(0, 0, screen_width, screen_height, GetColor(0.5 * 255, 0.8 * 255, 0.8 * 255), true);
 		
 		RayTracing(toLight,eye,objects);
+		DrawFormatString(0,0,0x000000,L"%02ffps",GetFPS());
 	}
 	DxLib_End();
 }

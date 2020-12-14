@@ -120,6 +120,16 @@ struct RayLine {
 struct Color {
 	float r, g, b;//RGB色
 	Color(float red, float green, float blue) :r(red), g(green), b(blue) {}
+	bool operator==(const Color& c) {
+		return r == c.r&&
+		g == c.g&&
+		b == c.b;
+	}
+	void operator=(const Color& c) {
+		r = c.r;
+		g = c.g;
+		b = c.b;
+	}
 	void operator*=(float m) {
 		r *= m;
 		g *= m;
@@ -135,7 +145,17 @@ struct Color {
 		g += c.g;
 		b += c.b;
 	}
+	Color operator*(float m)const  {
+		return Color(r * m,g*m,b*m);
+	}
+	Color operator*(const Color& c)const {
+		return Color(r * c.r, g * c.g, b * c.b);
+	}
+	Color operator+(const Color& c) {
+		return Color(r + c.r,	g + c.g,b + c.b);
+	}
 };
+
 
 ///表面模様定義
 enum class Pattern {
