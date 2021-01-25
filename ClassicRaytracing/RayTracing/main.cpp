@@ -9,8 +9,8 @@
 
 using namespace std;
 
-const int screen_width = 640;
-const int screen_height = 480;
+constexpr int screen_width = 640;
+constexpr int screen_height = 480;
 
 struct ColorU8 {
 	UINT8 r, g, b, a;
