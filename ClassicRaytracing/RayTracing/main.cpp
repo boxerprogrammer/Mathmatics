@@ -379,8 +379,8 @@ int main() {
 	bimg.ColorData.BlueWidth = 8;
 	bimg.ColorData.GreenWidth = 8;
 	bimg.ColorData.RedMask = 0x000000ff;
-	bimg.ColorData.BlueMask = 0x0000ff00;
-	bimg.ColorData.GreenMask = 0x00ff0000;
+	bimg.ColorData.GreenMask = 0x0000ff00;
+	bimg.ColorData.BlueMask = 0x00ff0000;
 	bimg.ColorData.AlphaMask = 0xff000000;
 	bimg.ColorData.Format = DX_BASEIMAGE_FORMAT_NORMAL;
 	bimg.Width = screen_width;
