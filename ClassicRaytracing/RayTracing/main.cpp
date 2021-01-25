@@ -4,14 +4,32 @@
 #include<functional>
 #include<iostream>
 #include<omp.h>
+#include<cassert>
 #include"Geometry.h"
 
 using namespace std;
 
-constexpr int screen_width = 640;
-constexpr int screen_height = 480;
+const int screen_width = 640;
+const int screen_height = 480;
 
-uint32_t canvas[screen_height][screen_width] = {};
+struct ColorU8 {
+	UINT8 r, g, b, a;
+	ColorU8() :r(0), g(0), b(0), a(0) {}
+	ColorU8(UINT8 inr, UINT8 ing, UINT8 inb, UINT8 ina) :r(inr), g(ing), b(inb), a(ina) {};
+	void SetColor(UINT8 inr, UINT8 ing, UINT8 inb, UINT8 ina) {
+		r = inr;
+		g = ing;
+		b = inb;
+		a = ina;
+	}
+};
+using ColorData_t = vector<ColorU8>;
+void DrawPixelData(ColorData_t& data, int x, int y, UINT8 r, UINT8 g, UINT8 b) {
+	assert(data.size() == screen_width * screen_height);
+	assert(0 <= x && x < screen_width);
+	assert(0 <= y && y < screen_height);
+	data[(size_t)x + (size_t)screen_width * (size_t)y].SetColor(r, g, b, 255);
+}
 
 //ヒントになると思って、色々と関数を用意しておりますが
 //別にこの関数を使わなければいけないわけでも、これに沿わなければいけないわけでも
@@ -73,8 +91,18 @@ Vector3 ReflectedVector(const Vector3& inVec, const Vector3& normalVec) {
 ///@param b 青(0～1)
 void
 DrawPixelWithFloat(int x,int y,float r, float g, float b) {
-	//DrawPixel(x, y, GetColor(min(r * 0xff,0xff), min(g * 0xff,0xff), min(b * 0xff,0xff)));
-	canvas[y][x] = GetColor(min(r * 0xff, 0xff), min(g * 0xff, 0xff), min(b * 0xff, 0xff));
+	DrawPixel(x, y, GetColor(min(r * 0xff,0xff), min(g * 0xff,0xff), min(b * 0xff,0xff)));
+}
+
+///0～1のRGB浮動小数で色を打つ
+///@param x X座標
+///@param y Y座標
+///@param r 赤(0～1)
+///@param g 緑(0～1)
+///@param b 青(0～1)
+void
+DrawPixelDataFloat(ColorData_t& data, int x, int y, float r, float g, float b) {
+	DrawPixelData(data,x, y, min(r * 0xff, 0xff), min(g * 0xff, 0xff), min(b * 0xff, 0xff));
 }
 
 ///表面材質と法線と光から単純にそのオブジェクトにおけるその点の色を返す
@@ -150,12 +178,7 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 					//反射するなら反射ベクトルと衝突点を元に再帰する(再帰限界を考慮して)
 					auto ray = ReflectedVector(rayline.vector, normal).Normalized();
 					auto color = GetBasicColor(obj, rayline.vector, hitpos, normal, toLight);
-					float reflectivity = 0.5f;
-					auto reflectColor = RecursiveTrace(RayLine(hitpos, ray), objects, obj, toLight, limit - 1);
-					if (reflectColor == Color(-1, -1, -1)) {
-						reflectivity = 0.0f;
-					}
-					color = color*(1.0f-reflectivity)+reflectColor*reflectivity;
+					color *= RecursiveTrace(RayLine(hitpos, ray), objects, obj, toLight, limit - 1);
 					return color;
 				};
 				if (distance < zbuffunc.first) {
@@ -189,7 +212,7 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 			return Color(0.5, 1, 1);
 		}
 		else {
-			return Color(-1, -1, -1);
+			return Color(1, 1, 1);
 		}
 	}
 	else {
@@ -201,7 +224,7 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 ///@param toLight ライト方向
 ///@param eye 視点座標
 ///@param objects 視線がヒットする可能性のあるオブジェクト(複数)
-void RayTracing(Vector3 toLight, const Position3& eye,std::vector<GeometryObject*>& objects) {
+void RayTracing(ColorData_t& data,Vector3 toLight, const Position3& eye,std::vector<GeometryObject*>& objects) {
 	
 	toLight.Normalize();
 	float ambient = 0.1f;
@@ -217,13 +240,8 @@ void RayTracing(Vector3 toLight, const Position3& eye,std::vector<GeometryObject
 
 			//再帰トレース関数を呼び出す
 			auto c = RecursiveTrace(RayLine(eye,ray),objects,nullptr,toLight,5);
-			DrawPixelWithFloat(x, y, c.r, c.g, c.b);
-			continue;
-		}
-	}
-	for (int y = 0; y < screen_height; ++y) {//スクリーン縦方向
-		for (int x = 0; x < screen_width; ++x) {//スクリーン横方向
-			DrawPixel(x, y, canvas[y][x]);
+			DrawPixelDataFloat(data,x, y, c.r, c.g, c.b);
+			
 		}
 	}
 }
@@ -332,15 +350,37 @@ void RayTracing(Vector3 toLight, const Position3& eye,std::vector<GeometryObject
 //	}
 //}
 
-#ifdef _DEBUG
+
 int main() {
-#else
-int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int) {
-#endif
+	vector<ColorU8> data(screen_width * screen_height);
 	ChangeWindowMode(true);
 	SetGraphMode(screen_width, screen_height, 32);
 	SetMainWindowText(_T("古典的レイトレーシング"));
 	DxLib_Init();
+	SetDrawScreen(DX_SCREEN_BACK);
+
+	BASEIMAGE bimg = {};
+	bimg.GraphData = data.data();
+	bimg.ColorData.ColorBitDepth = 32;
+	bimg.ColorData.BlueLoc = 8;
+	bimg.ColorData.GreenLoc = 16;
+	bimg.ColorData.AlphaLoc = 24;
+	bimg.ColorData.RedLoc = 0;
+	bimg.ColorData.PixelByte = 4;
+	bimg.ColorData.AlphaWidth = 8;
+	bimg.ColorData.RedWidth = 8;
+	bimg.ColorData.BlueWidth = 8;
+	bimg.ColorData.GreenWidth = 8;
+	bimg.ColorData.RedMask = 0x000000ff;
+	bimg.ColorData.BlueMask = 0x0000ff00;
+	bimg.ColorData.GreenMask = 0x00ff0000;
+	bimg.ColorData.AlphaMask = 0xff000000;
+	bimg.ColorData.Format = DX_BASEIMAGE_FORMAT_NORMAL;
+	bimg.Width = screen_width;
+	bimg.Height = screen_height;
+	bimg.Pitch = screen_width * sizeof(data[0]);
+
+	auto gH = CreateGraphFromBaseImage(&bimg);
 
 	//第一引数が視点
 	//第二引数が球となっています。
@@ -362,6 +402,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int) {
 	Sphere* sp = (Sphere*)(objects[0]);
 	Vector3 toLight(-1, 1, 1);
 	while(ProcessMessage()==0){
+		ClearDrawScreen();
 		DxLib::GetHitKeyStateAll(keystate);
 		if (keystate[KEY_INPUT_4]) {
 			toLight.x -= 0.05f;
@@ -407,8 +448,12 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int) {
 
 		DrawBox(0, 0, screen_width, screen_height, GetColor(0.5 * 255, 0.8 * 255, 0.8 * 255), true);
 		
-		RayTracing(toLight,eye,objects);
-		DrawFormatString(0,0,0x000000,L"%02ffps",GetFPS());
+		RayTracing(data,toLight,eye,objects);
+		ReCreateGraphFromBaseImage(&bimg, gH);
+		DrawGraph(0, 0, gH, false);
+		auto fps = GetFPS();
+		DrawFormatString(10, 10, 0xffffff, L"%f", fps);
+		ScreenFlip();
 	}
 	DxLib_End();
 }
