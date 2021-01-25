@@ -162,8 +162,10 @@ Color GetBasicColor(const GeometryObject* object, const Vector3& ray,const Posit
 ///@param exclusiveObject 除外すべきオブジェクト
 ///@param toLight 光源方向へのベクトル
 ///@param limit 再帰限界
-Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, GeometryObject* exclusiveObject,Vector3& toLight,unsigned int limit) {
+///@param miss 何にも当たらなかった
+Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, GeometryObject* exclusiveObject,Vector3& toLight,unsigned int limit,bool& miss) {
 	pair<float, function<Color(void)> > zbuffunc = make_pair(FLT_MAX, []()->Color {return Color(0,0,0); });
+	miss = false;
 	//すべての物体とのあたり判定を見る
 	for (GeometryObject* obj : objects) {
 		if (exclusiveObject == obj) continue;
@@ -173,12 +175,16 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 		if (obj->CheckHit(rayline, hitpos, normal)) {
 			auto distance=(hitpos - rayline.start).Magnitude();
 			//物体は反射する？しない？部分的にそう？
-			if (limit > 0&&obj->GetMaterial().reflectance > 0.1f) {
+			auto& material = obj->GetMaterial();
+			if (limit > 0&&material.reflectance > 0.1f) {
 				auto func= [=,&objects,&toLight]() {
 					//反射するなら反射ベクトルと衝突点を元に再帰する(再帰限界を考慮して)
 					auto ray = ReflectedVector(rayline.vector, normal).Normalized();
 					auto color = GetBasicColor(obj, rayline.vector, hitpos, normal, toLight);
-					color *= RecursiveTrace(RayLine(hitpos, ray), objects, obj, toLight, limit - 1);
+					bool miss;
+					auto refcol=RecursiveTrace(RayLine(hitpos, ray), objects, obj, toLight, limit - 1, miss);
+					auto blend = miss ? 0.0f: material.reflectance;
+					color = color*(1.0f-blend)+ refcol*blend;
 					return color;
 				};
 				if (distance < zbuffunc.first) {
@@ -204,7 +210,6 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 					zbuffunc = make_pair(distance, func);
 				}
 			}
-			continue;
 		}
 	}
 	if ( zbuffunc.first==FLT_MAX) {
@@ -212,6 +217,7 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 			return Color(0.5, 1, 1);
 		}
 		else {
+			miss = true;
 			return Color(1, 1, 1);
 		}
 	}
@@ -239,7 +245,8 @@ void RayTracing(ColorData_t& data,Vector3 toLight, const Position3& eye,std::vec
 			ray.Normalize();
 
 			//再帰トレース関数を呼び出す
-			auto c = RecursiveTrace(RayLine(eye,ray),objects,nullptr,toLight,5);
+			bool miss;
+			auto c = RecursiveTrace(RayLine(eye,ray),objects,nullptr,toLight,5,miss);
 			DrawPixelDataFloat(data,x, y, c.r, c.g, c.b);
 			
 		}
@@ -391,11 +398,11 @@ int main() {
 
 	std::vector<GeometryObject*> objects;
 	objects.push_back(new Sphere(100, Position3(0, -100, -100), 
-		Material(Color(1.0f, 0.7f, 0.7f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 20.0f, 1.0f)));
+		Material(Color(1.0f, 0.7f, 0.7f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 20.0f, 0.9f)));
 	objects.push_back(new Sphere(100, Position3(200, 0, -200), 
-		Material(Color(0.5f, 0.7f, 1.0f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 1.0f)));
+		Material(Color(0.5f, 0.7f, 1.0f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.5f)));
 	objects.push_back(new Sphere(100, Position3(-100, 50, -300), 
-		Material(Color(1.0f, 1.0f, 0.7f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 1.0f)));
+		Material(Color(1.0f, 1.0f, 0.7f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.7f)));
 	objects.push_back(new Plane(Vector3(0, 1, 0), -200, 
 		Material(Color(0.7f, 1.0f, 0.7f), Color(0.0, 0.0f, 0.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.0f, Pattern::checkered)));
 

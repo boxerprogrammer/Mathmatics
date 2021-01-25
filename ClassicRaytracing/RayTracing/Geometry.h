@@ -135,6 +135,13 @@ struct Color {
 		g += c.g;
 		b += c.b;
 	}
+	Color operator*(float scale) {
+		return Color(r*scale, g*scale, b*scale);
+	}
+	Color operator+(const Color& col) {
+		return Color(r + col.r, g + col.g, b + col.b);
+	}
+
 };
 
 ///•\–Ê–Í—l’è‹`
