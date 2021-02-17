@@ -141,8 +141,10 @@ struct Color {
 	Color operator+(const Color& col) {
 		return Color(r + col.r, g + col.g, b + col.b);
 	}
-
 };
+
+static Color Black(0.0f, 0.0f, 0.0f);
+static Color White(1.0f, 1.0f, 1.0f);
 
 ///表面模様定義
 enum class Pattern {
@@ -155,19 +157,23 @@ enum class Pattern {
 
 ///表面材質	
 struct Material {
-	Color diffuse;//拡散反射成分(cosで表されるやつが返す色)
+	Color baseColor;//拡散反射成分(cosで表されるやつが返す色)
+	Color subColor;//ベースカラーがストライプorチェック柄の場合もう一つの色
 	Color specular;//鏡面反射成分(スペキュラで決定される表面材質が返す色)
 	Color ambient;//環境光(ゲタ)
 	float specularity;//スペキュラの強さ(乗数)
-	float reflectance;//反射率
+	float baseReflectance;//ベース反射率
+	float subReflectance;//サブ反射率
 	Pattern pattern;//模様種別
-	Material() : diffuse(1,1,1),specular(0,0,0),ambient(0,0,0),specularity(0),reflectance(0){}
-	Material(const Color& diff,
+	Material() : baseColor(1,1,1), subColor(1, 0, 1), specular(0,0,0),ambient(0,0,0),specularity(0),baseReflectance(0){}
+	Material(
+		const Color& baseCol,
+		const Color& subCol,
 		const Color& spec,
 		const Color& amb,
 		float inSpecularity,
 		float inReflectance,
-		Pattern p=Pattern::none) : diffuse(diff), specular(spec), ambient(amb), specularity(inSpecularity), reflectance(inReflectance),pattern(p) {}
+		Pattern p=Pattern::none) : baseColor(baseCol),subColor(subCol), specular(spec), ambient(amb), specularity(inSpecularity), baseReflectance(inReflectance),pattern(p) {}
 };
 
 ///平面とか球を一緒くたにするためにあるやつ

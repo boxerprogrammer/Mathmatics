@@ -132,17 +132,17 @@ Color GetBasicColor(const GeometryObject* object, const Vector3& ray,const Posit
 
 	float specular[3] = { specularB,specularB,specularB };
 	
-	float albedo[3] = { mat.diffuse.r ,mat.diffuse.g,mat.diffuse.b };
+	float albedo[3] = { mat.baseColor.r ,mat.baseColor.g,mat.baseColor.b };
 
 	if (mat.pattern == Pattern::checkered) {
 		int thresholdX = (int)hitpos.x / 20;
 		int thresholdZ = (int)hitpos.z / 20;
 		int threshold = thresholdX + thresholdZ;
 		threshold = threshold < 0 ? threshold + 2 : threshold;
-		for (auto& a : albedo) {
-			if (abs(threshold % 2) == (hitpos.x*hitpos.z > 0)) {
-				a *= 0.7;
-			}
+		if (abs(threshold % 2) == (hitpos.x*hitpos.z > 0)) {
+			albedo[0] = mat.subColor.r;
+			albedo[1] = mat.subColor.g;
+			albedo[2] = mat.subColor.b;
 		}
 	}
 
@@ -154,6 +154,21 @@ Color GetBasicColor(const GeometryObject* object, const Vector3& ray,const Posit
 		min(diffuse[2] + specular[2] + ambient,1) };
 	
 	return Color(color[0], color[1], color[2]);
+}
+
+float 
+GetReflectance(const GeometryObject* object, const Vector3& ray, const Position3& hitpos, const Vector3& normal, const Vector3& toLight) {
+	const auto& mat = object->GetMaterial();
+	if (mat.pattern == Pattern::checkered) {
+		int thresholdX = (int)hitpos.x / 20;
+		int thresholdZ = (int)hitpos.z / 20;
+		int threshold = thresholdX + thresholdZ;
+		threshold = threshold < 0 ? threshold + 2 : threshold;
+		if (abs(threshold % 2) == (hitpos.x * hitpos.z > 0)) {
+			return mat.subReflectance;
+		}
+	}
+	return mat.baseReflectance;
 }
 
 ///再帰トレースする
@@ -176,22 +191,20 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 			auto distance=(hitpos - rayline.start).Magnitude();
 			//物体は反射する？しない？部分的にそう？
 			auto& material = obj->GetMaterial();
-			if (limit > 0&&material.reflectance > 0.1f) {
-				auto func= [=,&objects,&toLight]() {
+			
+			auto func= [=,&objects,&toLight]() {
+				auto reflectance = GetReflectance(obj, rayline.vector, hitpos, normal, toLight);
+				if (limit > 0 && reflectance > 0.0f) {
 					//反射するなら反射ベクトルと衝突点を元に再帰する(再帰限界を考慮して)
 					auto ray = ReflectedVector(rayline.vector, normal).Normalized();
 					auto color = GetBasicColor(obj, rayline.vector, hitpos, normal, toLight);
 					bool miss;
-					auto refcol=RecursiveTrace(RayLine(hitpos, ray), objects, obj, toLight, limit - 1, miss);
-					auto blend = miss ? 0.0f: material.reflectance;
-					color = color*(1.0f-blend)+ refcol*blend;
+					auto refcol = RecursiveTrace(RayLine(hitpos, ray), objects, obj, toLight, limit - 1, miss);
+					auto blend = miss ? 0.0f : reflectance;
+					color = color * (1.0f - blend) + refcol * blend;
 					return color;
-				};
-				if (distance < zbuffunc.first) {
-					zbuffunc = make_pair(distance, func);
 				}
-			} else {//反射しない
-				auto func = [=]() {
+				else {
 					//物体をそのまま描画する
 					auto color = GetBasicColor(obj, rayline.vector, hitpos, normal, toLight);
 					//反射しないなら光源方向を調べて物体のどれかと当たっていたら暗くする
@@ -205,11 +218,12 @@ Color RecursiveTrace(RayLine& rayline, std::vector<GeometryObject*>& objects, Ge
 						}
 					}
 					return color;
-				};
-				if (distance < zbuffunc.first) {
-					zbuffunc = make_pair(distance, func);
 				}
+			};
+			if (distance < zbuffunc.first) {
+				zbuffunc = make_pair(distance, func);
 			}
+			
 		}
 	}
 	if ( zbuffunc.first==FLT_MAX) {
@@ -398,13 +412,15 @@ int main() {
 
 	std::vector<GeometryObject*> objects;
 	objects.push_back(new Sphere(100, Position3(0, -100, -100), 
-		Material(Color(1.0f, 0.7f, 0.7f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 20.0f, 0.9f)));
+		Material(Color(1.0f, 0.7f, 0.7f),Black, Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 20.0f, 0.9f)));
 	objects.push_back(new Sphere(100, Position3(200, 0, -200), 
-		Material(Color(0.5f, 0.7f, 1.0f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.5f)));
+		Material(Color(0.5f, 0.7f, 1.0f),Black, Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.5f)));
 	objects.push_back(new Sphere(100, Position3(-100, 50, -300), 
-		Material(Color(1.0f, 1.0f, 0.7f), Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.7f)));
-	objects.push_back(new Plane(Vector3(0, 1, 0), -200, 
-		Material(Color(0.7f, 1.0f, 0.7f), Color(0.0, 0.0f, 0.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.0f, Pattern::checkered)));
+		Material(Color(1.0f, 1.0f, 0.7f), Black, Color(1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.7f)));
+	auto plane = new Plane(Vector3(0, 1, 0), -200,
+		Material(Color(1.0f, 1.0f, 0.7f), Color(1.0f, 0.0f, 1.0f), Color(0.0, 0.0f, 0.0f), Color(0.0f, 0.0f, 0.0f), 10.0f, 0.0f, Pattern::checkered));
+	plane->material.subReflectance = 0.75f;
+	objects.push_back(plane);
 
 	Sphere* sp = (Sphere*)(objects[0]);
 	Vector3 toLight(-1, 1, 1);
