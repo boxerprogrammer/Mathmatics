@@ -42,18 +42,18 @@ bool IsHit(const Circle& a,const Circle& b) {
 	float totalRadius = a.radius + b.radius;//二つの円の半径を足したもの
 
 	//③あたり判定のコードを書いてください
-	return totalRadius*totalRadius>=xdiff*xdiff + ydiff*ydiff;//ここはOCでは消します
+	return totalRadius*totalRadius>=xdiff*xdiff + ydiff*ydiff;
 
-	bool ret = false;
-	if (false) {//③ここに当たるための条件を書いてください
-		//③当たる条件に合致したらretにtrueを代入してください
-		//円の当たり判定というのは、
-		//お互いの円の半径を足したものより中心点間の距離が近ければ当たっている
-		//そうでなければ当たっていないというものです。
+	//bool ret = false;
+	//if (false) {//③ここに当たるための条件を書いてください
+	//	//③当たる条件に合致したらretにtrueを代入してください
+	//	//円の当たり判定というのは、
+	//	//お互いの円の半径を足したものより中心点間の距離が近ければ当たっている
+	//	//そうでなければ当たっていないというものです。
 
-	}
+	//}
 
-	return ret;
+	//return ret;
 }
 
 ///ボールの衝突チェック
