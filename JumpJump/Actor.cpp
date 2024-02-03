@@ -25,6 +25,6 @@ void Actor::Draw()
 		}
 		frame -= frames_[idx];
 	}
-	DrawRotaGraph2(pos_.x, pos_.y, w / 2, h, 1.0f, 0.0f, handle_, true);
+	DrawRectRotaGraph2(pos_.x, pos_.y, idx*w,0,w,h, w / 2, h, 1.0f, 0.0f, handle_, true);
 	frame_ = (frame_ + 1) % totalFrame_;
 }

@@ -4,6 +4,7 @@ class Jumper :
     public Actor
 {
 public:
+    Jumper();
     void Update();
 
 };
