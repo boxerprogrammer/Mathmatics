@@ -9,6 +9,17 @@ namespace {
 	constexpr int h = 32;
 }
 
+void Actor::UpdateKeyState()
+{
+	lastKeyState_ = keyState_;
+	GetHitKeyStateAll(keyState_.data());
+}
+
+bool Actor::IsTriggered(int idx) const
+{
+	return keyState_[idx]&&!lastKeyState_[idx];
+}
+
 Actor::Actor()
 {
 	handle_ = DxLib::LoadGraph(L"img/character.png");

@@ -1,7 +1,12 @@
 #include "Jumper.h"
+#include<DxLib.h>
 
 namespace {
 	constexpr int ground_line = 380;
+}
+
+void Jumper::Jump()
+{
 }
 
 Jumper::Jumper() :Actor()
@@ -12,4 +17,9 @@ Jumper::Jumper() :Actor()
 
 void Jumper::Update()
 {
+	UpdateKeyState();
+	if (IsTriggered(KEY_INPUT_Z)) {
+		Jump();
+	}
+
 }
