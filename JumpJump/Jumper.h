@@ -4,9 +4,11 @@ class Jumper :
     public Actor
 {
 private:
+    Vector2 vel_ = {};
     void Jump();
+    void OnGround();
 public:
-    Jumper();
+    Jumper(int inx=500);
     void Update();
 
 };

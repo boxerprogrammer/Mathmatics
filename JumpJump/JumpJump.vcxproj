@@ -130,14 +130,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="BadJumper.cpp" />
     <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="Jumper.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PoorJumper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
+    <ClInclude Include="BadJumper.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="Jumper.h" />
+    <ClInclude Include="PoorJumper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
