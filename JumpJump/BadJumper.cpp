@@ -1,4 +1,4 @@
-#include "Jumper.h"
+#include "BadJumper.h"
 #include<DxLib.h>
 
 namespace {
@@ -6,32 +6,34 @@ namespace {
 	constexpr float g = 0.5f;
 }
 
-void Jumper::Jump()
+void BadJumper::Jump()
 {
-	vel_.y = -15.0f;
+	pos_.y = ground_line - 200;
 }
 
-void Jumper::OnGround()
+void BadJumper::OnGround()
 {
 	pos_.y = ground_line;
 	vel_.y = 0.0f;
 }
 
-Jumper::Jumper(int inx) :Actor(L"GOOD")
+BadJumper::BadJumper(int inx) :Actor(L" BAD")
 {
 	pos_.x = inx;
 	pos_.y = ground_line;
 }
 
-void Jumper::Update()
+void BadJumper::Update()
 {
 	UpdateKeyState();
 	if (IsTriggered(KEY_INPUT_Z)) {
 		Jump();
 	}
-	vel_.y += g;
 	pos_ += vel_;
 	if (pos_.y >= ground_line) {
 		OnGround();
+	}
+	else {
+		vel_.y = 5.0f;
 	}
 }

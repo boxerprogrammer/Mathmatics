@@ -1,6 +1,7 @@
 #pragma once
 #include "Actor.h"
-class Jumper :
+//“™‘¬ƒWƒƒƒ“ƒv–ì˜Y
+class PoorJumper :
     public Actor
 {
 private:
@@ -8,7 +9,7 @@ private:
     void Jump();
     void OnGround();
 public:
-    Jumper(int inx=500);
+    PoorJumper(int inx=500);
     void Update();
 
 };
