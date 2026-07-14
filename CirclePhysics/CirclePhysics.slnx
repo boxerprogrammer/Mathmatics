@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="CirclePhysics.vcxproj" Id="159b8f7b-a02b-4b1f-a2d3-3bab2dc6da38" />
+</Solution>
